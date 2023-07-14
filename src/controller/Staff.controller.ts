@@ -15,7 +15,11 @@ export const getStaffHandler = async (
 ) => {
   try {
     // Retrieve all instances of the Block entity from BlockRepo
-    await StaffRepo.find()
+    await StaffRepo.find({
+      relations: {
+        prison: true,
+      },
+    })
       .then((result) => {
         // Send a JSON response with a 200 status code and the retrieved data
         res.status(200).json({

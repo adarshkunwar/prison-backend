@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import { Prisoner } from './Prisoner';
 
@@ -23,10 +29,10 @@ export class Visitor {
   contactNumber: string;
 
   @Column()
-  dateOfVisit: Date;
+  relation: string;
 
-  @Column()
-  timeOfVisit: string;
+  @CreateDateColumn()
+  dateOfVisit: Date;
 
   @ManyToOne(() => Prisoner, (prisoner) => prisoner.visitors)
   prisoner: Prisoner;

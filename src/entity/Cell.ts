@@ -15,7 +15,7 @@ export class Cell {
   id: string;
 
   @Column()
-  cellNumber: number;
+  cellName: string;
 
   @Column()
   capacity: number;

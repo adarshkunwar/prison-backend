@@ -11,7 +11,11 @@ export const getBlockHandler = async (
   next: NextFunction
 ) => {
   try {
-    const result = await BlockRepo.find();
+    const result = await BlockRepo.find({
+      relations: {
+        prison: true,
+      },
+    });
     res.status(200).json({
       status: 'success',
       result,

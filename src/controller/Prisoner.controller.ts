@@ -69,8 +69,15 @@ export const postPrisonerHandler = async (
 ) => {
   try {
     console.log(req.body);
-
-    await PrisonerRepo.save(req.body)
+    if (req.file) {
+      req.body.image = req.file.filename;
+    }
+    console.log(req.body.dateOfRelease);
+    await PrisonerRepo.save({
+      ...req.body,
+      age: parseInt(req.body.age),
+      contactNumber: parseInt(req.body.contactNumber),
+    })
       .then((result) => {
         // Send a JSON response with a 200 status code and the saved data
         res.status(200).json({
@@ -80,10 +87,12 @@ export const postPrisonerHandler = async (
       })
       .catch((error) => {
         // If an error occurs, pass it to the error-handling middleware using the AppError class
+        // console.log(error);
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
     // If an error occurs, pass it to the error-handling middleware using the AppError class
+    // console.log(error);
     next(new AppError(error.statusCode, error.message));
   }
 };

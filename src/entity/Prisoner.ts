@@ -28,16 +28,19 @@ export class Prisoner {
   address: string;
 
   @Column()
-  contactNumber: string;
+  contactNumber: number;
 
   @CreateDateColumn()
   dateOfAdmission: Date;
 
   @Column()
-  dateOfRelease: Date;
+  dateOfRelease: string;
 
   @Column()
   crime: string;
+
+  @Column()
+  image: string;
 
   @ManyToOne(() => Cell, (cell) => cell.prisoners)
   cell: Cell;
@@ -50,5 +53,5 @@ export class Prisoner {
   visitors: Visitor[];
 
   @Column()
-  latestVisit: Date;
+  latestVisit: string;
 }

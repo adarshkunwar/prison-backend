@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Prison } from './Prison';
 
 @Entity()
@@ -21,7 +27,7 @@ export class Staff {
   @Column()
   contactNumber: string;
 
-  @Column()
+  @CreateDateColumn()
   dateOfJoining: Date;
 
   @Column()

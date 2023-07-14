@@ -11,7 +11,11 @@ export const getCellHandler = async (
   next: NextFunction
 ) => {
   try {
-    await CellRepo.find()
+    await CellRepo.find({
+      relations: {
+        block: true,
+      },
+    })
       .then((result) => {
         res.status(200).json({
           status: 'success',
@@ -37,6 +41,7 @@ export const getCellByIdHandler = async (
         id: req.params.id,
       },
       relations: {
+        block: true,
         prisoners: true,
       },
     })
@@ -64,8 +69,12 @@ export const postCellHandler = async (
 ) => {
   try {
     console.log(req.body);
-
-    await CellRepo.save(req.body.Service)
+    if (req.body.currentOccupancy > req.body.capacity) {
+      return next(
+        new AppError(400, 'Current occupancy cannot be greater than capacity')
+      );
+    }
+    await CellRepo.save(req.body)
       .then((result) => {
         res.status(200).json({
           status: 'success',
@@ -92,16 +101,11 @@ export const updateCellHandler = async (
       return next(new AppError(404, 'Cell not found'));
     }
 
-    let cells = [];
-
-    req.body.service.map((item) => {
-      let data = JSON.parse(item);
-      return cells.push(data);
-    });
-
-    req.body.service = [...cells];
-
-    console.log(req.body);
+    if (req.body.currentOccupancy > req.body.capacity) {
+      return next(
+        new AppError(400, 'Current occupancy cannot be greater than capacity')
+      );
+    }
 
     Object.assign(service, req.body);
 
