@@ -110,17 +110,6 @@ export const updatePrisonHandler = async (
       return next(new AppError(404, 'Block not found'));
     }
 
-    let product = [];
-
-    req.body.service.map((item) => {
-      let data = JSON.parse(item);
-      return product.push(data);
-    });
-
-    req.body.service = [...product];
-
-    console.log(req.body);
-
     // Update the existing Block entity with the properties from req.body using Object.assign
     Object.assign(service, req.body);
 
