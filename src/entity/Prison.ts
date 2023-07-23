@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Block } from './Block';
+import { Prisoner } from './Prisoner';
 import { Staff } from './Staff';
 
 @Entity()
@@ -13,11 +14,14 @@ export class Prison {
   @Column()
   address: string;
 
-  @Column()
+  @Column({ default: 0 })
   capacity: number;
 
-  @Column()
+  @Column({ default: 0 })
   currentOccupancy: number;
+
+  @Column()
+  description: string;
 
   @OneToMany(() => Block, (block) => block.prison, {
     cascade: true,
@@ -32,4 +36,11 @@ export class Prison {
     onUpdate: 'CASCADE',
   })
   staffs: Staff[];
+
+  @OneToMany(() => Prisoner, (Prisoner) => Prisoner.prison, {
+    cascade: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  prisoners: Prisoner[];
 }

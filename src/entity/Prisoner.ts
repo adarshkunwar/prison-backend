@@ -7,7 +7,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { Block } from './Block';
 import { Cell } from './Cell';
+import { Prison } from './Prison';
 import { Visitor } from './Visitor';
 
 @Entity()
@@ -39,11 +41,17 @@ export class Prisoner {
   @Column()
   crime: string;
 
-  @Column()
-  image: string;
+  // @Column()
+  // image: string;
 
   @ManyToOne(() => Cell, (cell) => cell.prisoners)
   cell: Cell;
+
+  @ManyToOne(() => Block, (block) => block.prisoners)
+  block: Block;
+
+  @ManyToOne(() => Prison, (prison) => prison.prisoners)
+  prison: Prison;
 
   @OneToMany(() => Visitor, (visitor) => visitor.prisoner, {
     cascade: true,

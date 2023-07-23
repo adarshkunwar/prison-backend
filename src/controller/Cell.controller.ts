@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import AppError from '../Utils/AppError';
 import { AppDataSource } from '../data-source';
+import { Block } from '../entity/Block';
 import { Cell } from '../entity/Cell';
+import { Prison } from '../entity/Prison';
 
 const CellRepo = AppDataSource.getRepository(Cell);
+const BlockRepo = AppDataSource.getRepository(Block);
+const PrisonRepo = AppDataSource.getRepository(Prison);
 
 export const getCellHandler = async (
   req: Request,
@@ -130,8 +134,25 @@ export const deleteCellHandler = async (
   next: NextFunction
 ) => {
   try {
-    await CellRepo.delete(req.params.id)
-      .then((result) => {
+    const cell = await CellRepo.find({
+      where: {
+        id: req.params.id,
+      },
+      relations: {
+        block: true,
+      },
+    });
+    if (!cell) {
+      return next(new AppError(404, 'cell not found'));
+    }
+    await CellRepo.remove(cell)
+      .then(async (result) => {
+        console.log(result);
+        await BlockRepo.update(result[0].block.id, {
+          capacity: result[0].block.capacity - result[0].capacity,
+          currentOccupancy:
+            result[0].block.currentOccupancy - result[0].currentOccupancy,
+        });
         res.status(200).json({
           status: 'success',
           result,

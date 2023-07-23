@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Cell } from './Cell';
 import { Prison } from './Prison';
+import { Prisoner } from './Prisoner';
 
 @Entity()
 export class Block {
@@ -22,9 +23,15 @@ export class Block {
   @Column()
   blockName: string;
 
+  @Column()
+  totalCell: number;
+
   @ManyToOne(() => Prison, (prison) => prison.blocks)
   prison: Prison;
 
   @OneToMany(() => Cell, (cell) => cell.block)
   cells: Cell[];
+
+  @OneToMany(() => Prisoner, (prisoner) => prisoner.block)
+  prisoners: Prisoner[];
 }

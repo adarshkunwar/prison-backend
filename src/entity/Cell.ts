@@ -11,7 +11,7 @@ import { Prisoner } from './Prisoner';
 
 @Entity()
 export class Cell {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('increment')
   id: string;
 
   @Column()
