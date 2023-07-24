@@ -107,7 +107,7 @@ export const updatePrisonHandler = async (
     let service = await PrisonRepo.findOneBy({ id: req.params.id });
 
     if (!service) {
-      return next(new AppError(404, 'Block not found'));
+      return next(new AppError(404, 'Prison not found'));
     }
 
     // Update the existing Block entity with the properties from req.body using Object.assign
@@ -141,13 +141,27 @@ export const deletePrisonHandler = async (
   next: NextFunction
 ) => {
   try {
-    let Service = await PrisonRepo.findOneBy({ id: req.params.id });
+    console.log(req.params.id);
+    let prison = await PrisonRepo.find({
+      where: {
+        id: req.params.id,
+      },
+      relations: {
+        blocks: true,
+      },
+    });
 
-    if (!Service) {
-      return next(new AppError(404, 'Block not found'));
+    if (!prison) {
+      return next(new AppError(404, 'Prison not found'));
     }
 
-    await PrisonRepo.remove(Service)
+    // if (prison.blocks.length > 0) {
+    //   return next(new AppError(400, 'Prison has blocks'));
+    // }
+
+    console.log(prison[0]);
+
+    await PrisonRepo.delete(prison[0])
       .then((result: any) => {
         console.log(result);
         res.status(200).json({
@@ -156,9 +170,11 @@ export const deletePrisonHandler = async (
         });
       })
       .catch((error: any) => {
+        console.log(error, 'jjhj');
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
+    console.log(error, 'jjhj');
     next(new AppError(error.statusCode, error.message));
   }
 };

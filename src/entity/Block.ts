@@ -26,7 +26,10 @@ export class Block {
   @Column()
   totalCell: number;
 
-  @ManyToOne(() => Prison, (prison) => prison.blocks)
+  @ManyToOne(() => Prison, (prison) => prison.blocks, {
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   prison: Prison;
 
   @OneToMany(() => Cell, (cell) => cell.block)

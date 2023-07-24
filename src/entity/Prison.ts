@@ -24,7 +24,7 @@ export class Prison {
   description: string;
 
   @OneToMany(() => Block, (block) => block.prison, {
-    cascade: true,
+    cascade: ['remove'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })

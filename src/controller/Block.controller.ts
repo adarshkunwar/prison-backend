@@ -69,8 +69,7 @@ export const postBlockHandler = async (
     });
     if (!prison) {
       console.log('could not find prison with id of' + req.body.prison);
-      next(new AppError(404, 'could not fidn prison'));
-      return;
+      return next(new AppError(404, 'could not fidn prison'));
     }
 
     const result = await BlockRepo.save(req.body);
@@ -145,7 +144,6 @@ export const deleteBlockHandler = async (
     if (!block) {
       return next(new AppError(404, 'Block not found'));
     }
-
     await BlockRepo.remove(block);
     res.status(204).end();
   } catch (error) {
