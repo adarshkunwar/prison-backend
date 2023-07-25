@@ -18,7 +18,6 @@ export const getPrisonHandler = async (
     await PrisonRepo.find({
       relations: {
         blocks: true,
-        staffs: true,
       },
     })
       .then((result) => {
@@ -53,7 +52,6 @@ export const getPrisonByIdHandler = async (
       },
       relations: {
         blocks: true,
-        staffs: true,
       },
     }).then((result) => {
       if (!result) {
@@ -95,6 +93,31 @@ export const postPrisonHandler = async (
       });
   } catch (error) {
     next(new AppError(error.statusCode, error.message));
+  }
+};
+
+export const postPrisonHandler2 = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log('-----inserting new prison -----');
+    await PrisonRepo.save({
+      ...req.body,
+      currentOccupancy: 0,
+    })
+      .then((result) => {
+        res.status(200).json({
+          status: 'Prison Added',
+          result,
+        });
+      })
+      .catch((error) => {
+        return next(new AppError(error.statusCode, error.message));
+      });
+  } catch (err) {
+    next(new AppError(err.statusCode, err.message));
   }
 };
 
@@ -141,13 +164,9 @@ export const deletePrisonHandler = async (
   next: NextFunction
 ) => {
   try {
-    console.log(req.params.id);
     let prison = await PrisonRepo.find({
       where: {
         id: req.params.id,
-      },
-      relations: {
-        blocks: true,
       },
     });
 

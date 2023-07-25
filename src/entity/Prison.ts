@@ -20,27 +20,10 @@ export class Prison {
   @Column({ default: 0 })
   currentOccupancy: number;
 
-  @Column()
-  description: string;
-
   @OneToMany(() => Block, (block) => block.prison, {
     cascade: ['remove'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
   blocks: Block[];
-
-  @OneToMany(() => Staff, (staff) => staff.prison, {
-    cascade: true,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  staffs: Staff[];
-
-  @OneToMany(() => Prisoner, (Prisoner) => Prisoner.prison, {
-    cascade: true,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  prisoners: Prisoner[];
 }
