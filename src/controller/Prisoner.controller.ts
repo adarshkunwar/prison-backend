@@ -19,9 +19,9 @@ export const getPrisonerHandler = async (
   try {
     // Retrieve all instances of the Block entity from BlockRepo
     await PrisonerRepo.find({
-      relations: {
-        cell: true,
-      },
+      // relations: {
+      //   cell: true,
+      // },
     })
       .then((result) => {
         // Send a JSON response with a 200 status code and the retrieved data
@@ -83,91 +83,92 @@ export const postPrisonerHandler = async (
       },
     });
 
-    const block = await blockRepo.find({
-      where: {
-        id: req.body.block,
-      },
-    });
-
-    const prison = await prisonRepo.find({
-      where: {
-        id: req.body.prison,
-      },
-    });
-
-    // check prison, block and cell exist
-    if (!prison) {
-      return next(new AppError(404, 'Prison not found'));
-    }
-    if (!block) {
-      return next(new AppError(404, 'Block not found'));
-    }
     if (!cell) {
       return next(new AppError(404, 'Cell not found'));
     }
-
-    // check if cell is in block, and block is on prison
-    if (cell[0].block.id !== block[0].id) {
-      return next(new AppError(404, 'Cell not found in block'));
-    } else if (block[0].prison.id !== prison[0].id) {
-      return next(new AppError(404, 'Block not found in prison'));
-    }
-
-    // check if prison is full, then check if the block is full, then check if the cell is full
-    if (prison[0].currentOccupancy >= prison[0].capacity) {
-      return next(new AppError(404, 'Prison is full'));
-    } else if (block[0].currentOccupancy >= block[0].capacity) {
-      return next(new AppError(404, 'Block is full'));
-    } else if (cell[0].currentOccupancy >= cell[0].capacity) {
-      return next(new AppError(404, 'Cell is full'));
-    } else {
-      if (cell[0].currentOccupancy >= cell[0].capacity) {
-        return next(new AppError(404, 'Cell is full'));
-      }
-      // starting to save the prisoner
-      await PrisonerRepo.save({
-        ...req.body,
-        age: parseInt(req.body.age),
-        contactNumber: parseInt(req.body.contactNumber),
-      })
-        .then(async (result) => {
-          // update the cell occupancy by 1 and also update block occupancy and prison occupancy
-          cell[0].currentOccupancy += 1;
-          res.status(200).json({
-            status: 'success',
-            result,
-          });
-          await cellRepo
-            .save({
-              ...cell[0],
-              currentOccupancy: cell[0].currentOccupancy + 1,
-            })
-            .then(async (result) => {
-              block[0].currentOccupancy += 1;
-              await blockRepo
-                .save({
-                  ...block[0],
-                  currentOccupancy: block[0].currentOccupancy + 1,
-                })
-                .then(async (result) => {
-                  prison[0].currentOccupancy += 1;
-                  await prisonRepo.save({
-                    ...prison[0],
-                    currentOccupancy: prison[0].currentOccupancy + 1,
-                  });
-                });
-            });
-        })
-        .catch((error) => {
-          next(new AppError(error.statusCode, error.message));
+    // if (cell[0].currentOccupancy >= cell[0].capacity) {
+    //   return next(new AppError(404, 'Cell is full'));
+    // } else {
+    // starting to save the prisoner
+    await PrisonerRepo.save({
+      ...req.body,
+      age: parseInt(req.body.age),
+      contactNumber: parseInt(req.body.contactNumber),
+    })
+      .then(async (result) => {
+        // update the cell occupancy by 1 and also update block occupancy and prison occupancy
+        cell[0].currentOccupancy += 1;
+        res.status(200).json({
+          status: 'success',
+          result,
         });
-      // everything is done
-      console.log('Prisoner is added');
-    }
+        await cellRepo
+          .save({
+            ...cell[0],
+            currentOccupancy: cell[0].currentOccupancy + 1,
+          })
+          .then(async (result) => {
+            // update the block occupancy by 1 and also update prison occupancy
+            /* cell[0].block.currentOccupancy += 1;
+            cell[0].block.prison.currentOccupancy += 1; */
+            console.log(result);
+            await cellRepo.save({
+              ...cell[0],
+              block: {
+                ...cell[0].block,
+                currentOccupancy: cell[0].block.currentOccupancy + 1,
+                prison: {
+                  ...cell[0].block.prison,
+                  currentOccupancy: cell[0].block.prison.currentOccupancy + 1,
+                },
+              },
+            });
+          });
+      })
+      .catch((error) => {
+        next(new AppError(error.statusCode, error.message));
+      });
+    // everything is done
+    console.log('Prisoner is added');
+    // }
   } catch (error) {
+    console.log('-------------------');
     next(new AppError(error.statusCode, error.message));
   }
 };
+
+// export const postPrisonerHandler = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   console.log(req, 'req');
+//   // console.log(req.body);
+//   try {
+//     console.log(
+//       '------------------------Prisoner Post Starts Here----------------------'
+//     );
+//     console.log(req.body);
+
+//     const cell = await cellRepo.findOneBy({ id: req.params.id });
+//     if (!cell) return next(new AppError(404, 'Cell Not Found'));
+
+//     await PrisonerRepo.save({
+//       ...req.body,
+//       id: parseInt(req.body.id),
+//       contactNumber: parseInt(req.body.contactNumber),
+//     }).then((result) => {
+//       console.log(result);
+//       res.status(200).json({
+//         status: 'success',
+//         result,
+//       });
+//     });
+//   } catch (error) {
+//     console.log('try catch error');
+//     return next(new AppError(error.statusCode, error.message));
+//   }
+// };
 
 /**
  * Handler for PATCH/PUT request to update a Block instance.

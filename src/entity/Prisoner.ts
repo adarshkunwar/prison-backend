@@ -44,16 +44,29 @@ export class Prisoner {
   // @Column()
   // image: string;
 
-  @ManyToOne(() => Cell, (cell) => cell.prisoners)
+  @ManyToOne(() => Cell, (cell) => cell.prisoners, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   cell: Cell;
 
-  @ManyToOne(() => Block, (block) => block.prisoners)
-  block: Block;
+  // @ManyToOne(() => Block, (block) => block.prisoners, {
+  //   onUpdate: 'CASCADE',
+  //   onDelete: 'CASCADE',
+  //   orphanedRowAction: 'delete',
+  // })
+  // block: Block;
 
-  @ManyToOne(() => Prison, (prison) => prison.prisoners)
-  prison: Prison;
+  // @ManyToOne(() => Prison, (prison) => prison.prisoners, {
+  //   onUpdate: 'CASCADE',
+  //   onDelete: 'CASCADE',
+  //   orphanedRowAction: 'delete',
+  // })
+  // prison: Prison;
 
   @OneToMany(() => Visitor, (visitor) => visitor.prisoner, {
+    eager: true,
     cascade: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

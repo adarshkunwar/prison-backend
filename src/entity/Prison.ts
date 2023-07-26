@@ -20,7 +20,11 @@ export class Prison {
   @Column({ default: 0 })
   currentOccupancy: number;
 
+  @Column()
+  createdDate: string;
+
   @OneToMany(() => Block, (block) => block.prison, {
+    eager: true,
     cascade: ['remove'],
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

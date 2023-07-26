@@ -1,18 +1,18 @@
 import { Router } from 'express';
+import { deletePrisonHandler } from '../controller/prisons/Prisons.delete.controller';
 import {
-  deletePrisonHandler,
-  getPrisonByIdHandler,
   getPrisonHandler,
-  postPrisonHandler,
-  updatePrisonHandler,
-} from '../controller/Prison.controller';
+  getSinglePrisonHandler,
+} from '../controller/prisons/Prisons.get.controller';
+import { createPrisonHandler } from '../controller/prisons/Prisons.post.controller';
+import { updatePrisonHandler } from '../controller/prisons/Prisons.put.controller';
 
 const router = Router();
 
-router.route('/').get(getPrisonHandler).post(postPrisonHandler);
+router.route('/').get(getPrisonHandler).post(createPrisonHandler);
 router
   .route('/:id')
-  .get(getPrisonByIdHandler)
+  .get(getSinglePrisonHandler)
   .put(updatePrisonHandler)
   .delete(deletePrisonHandler);
 

@@ -16,9 +16,9 @@ export const getPrisonHandler = async (
   try {
     // Retrieve all instances of the Block entity from BlockRepo
     await PrisonRepo.find({
-      relations: {
-        blocks: true,
-      },
+      // relations: {
+      //   blocks: true,
+      // },
     })
       .then((result) => {
         // Send a JSON response with a 200 status code and the retrieved data
@@ -50,9 +50,9 @@ export const getPrisonByIdHandler = async (
       where: {
         id: req.params.id,
       },
-      relations: {
-        blocks: true,
-      },
+      // relations: {
+      //   blocks: true,
+      // },
     }).then((result) => {
       if (!result) {
         return new AppError(404, 'Prison not found');
@@ -96,30 +96,30 @@ export const postPrisonHandler = async (
   }
 };
 
-export const postPrisonHandler2 = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    console.log('-----inserting new prison -----');
-    await PrisonRepo.save({
-      ...req.body,
-      currentOccupancy: 0,
-    })
-      .then((result) => {
-        res.status(200).json({
-          status: 'Prison Added',
-          result,
-        });
-      })
-      .catch((error) => {
-        return next(new AppError(error.statusCode, error.message));
-      });
-  } catch (err) {
-    next(new AppError(err.statusCode, err.message));
-  }
-};
+// export const postPrisonHandler2 = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     console.log('-----inserting new prison -----');
+//     await PrisonRepo.save({
+//       ...req.body,
+//       currentOccupancy: 0,
+//     })
+//       .then((result) => {
+//         res.status(200).json({
+//           status: 'Prison Added',
+//           result,
+//         });
+//       })
+//       .catch((error) => {
+//         return next(new AppError(error.statusCode, error.message));
+//       });
+//   } catch (err) {
+//     next(new AppError(err.statusCode, err.message));
+//   }
+// };
 
 export const updatePrisonHandler = async (
   req: Request,
@@ -127,17 +127,17 @@ export const updatePrisonHandler = async (
   next: NextFunction
 ) => {
   try {
-    let service = await PrisonRepo.findOneBy({ id: req.params.id });
+    let prison = await PrisonRepo.findOneBy({ id: req.params.id });
 
-    if (!service) {
+    if (!prison) {
       return next(new AppError(404, 'Prison not found'));
     }
 
     // Update the existing Block entity with the properties from req.body using Object.assign
-    Object.assign(service, req.body);
+    Object.assign(prison, req.body);
 
     // Save the modified Block entity using the save method of BlockRepo
-    await PrisonRepo.save(service)
+    await PrisonRepo.save(prison)
       .then((result) => {
         // Send a JSON response with a 200 status code and the saved data
         res.status(200).json({

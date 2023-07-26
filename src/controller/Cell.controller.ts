@@ -16,9 +16,9 @@ export const getCellHandler = async (
 ) => {
   try {
     await CellRepo.find({
-      relations: {
-        block: true,
-      },
+      // relations: {
+      //   block: true,
+      // },
     })
       .then((result) => {
         res.status(200).json({
@@ -44,10 +44,10 @@ export const getCellByIdHandler = async (
       where: {
         id: req.params.id,
       },
-      relations: {
-        block: true,
-        prisoners: true,
-      },
+      // relations: {
+      //   block: true,
+      //   prisoners: true,
+      // },
     })
       .then((result) => {
         if (!result) {
@@ -138,9 +138,9 @@ export const deleteCellHandler = async (
       where: {
         id: req.params.id,
       },
-      relations: {
-        block: true,
-      },
+      // relations: {
+      //   block: true,
+      // },
     });
     if (!cell) {
       return next(new AppError(404, 'cell not found'));

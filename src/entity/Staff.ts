@@ -36,6 +36,6 @@ export class Staff {
   @Column()
   designation: string;
 
-  @ManyToOne(() => Prison, (prison) => prison.staffs)
-  prison: Prison;
+  // @ManyToOne(() => Prison, (prison) => prison.staffs)
+  // prison: Prison;
 }

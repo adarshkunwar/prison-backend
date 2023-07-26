@@ -16,9 +16,9 @@ export const getBlockHandler = async (
 ) => {
   try {
     const result = await BlockRepo.find({
-      relations: {
-        prison: true,
-      },
+      // relations: {
+      //   prison: true,
+      // },
     });
     res.status(200).json({
       status: 'success',
@@ -39,10 +39,10 @@ export const getBlockByIdHandler = async (
       where: {
         id: req.params.id,
       },
-      relations: {
-        cells: true,
-        prison: true,
-      },
+      // relations: {
+      //   cells: true,
+      //   prison: true,
+      // },
     });
     if (!result) {
       return next(new AppError(404, 'Block not found'));
@@ -69,42 +69,63 @@ export const postBlockHandler = async (
     });
     if (!prison) {
       console.log('could not find prison with id of' + req.body.prison);
-      return next(new AppError(404, 'could not fidn prison'));
+      return next(new AppError(404, 'could not find prison'));
     }
 
-    const result = await BlockRepo.save(req.body);
-    res.status(201).json({
-      status: 'success',
-      result,
-    });
+    console.log(req.body);
+    const cellCapacity = Math.floor(req.body.capacity / req.body.totalCell);
+    const extraRemaining = Math.floor(req.body.capacity % req.body.totalCell);
 
-    await PrisonRepo.save({
-      id: req.body.prison,
-      ...prison,
-      capacity: prison.capacity + req.body.capacity,
-      currentOccupancy: prison.currentOccupancy + req.body.currentOccupancy,
-    });
+    // req.body.cells = [];
 
-    const cellCapacity = Math.floor(result.capacity / result.totalCell);
-    const extraRemaining = Math.floor(result.capacity % result.totalCell);
-    try {
-      const abc = async () => {
-        for (let i = 1; i <= req.body.totalCell; i++) {
-          await cellRepo.save({
-            cellName: result.blockName + i,
-            block: result.id,
-            capacity:
-              i === req.body.totalCell
-                ? cellCapacity + extraRemaining
-                : cellCapacity,
-            currentOccupancy: 0,
-          });
-        }
-      };
-      abc();
-    } catch (err) {
-      console.log(err);
-    }
+    const cell = new Cell();
+    cell.cellName = req.body.blockName + 1;
+    cell.block = req.body.id;
+    cell.capacity = cellCapacity + extraRemaining;
+    cell.currentOccupancy = 0;
+
+    await cellRepo.save(cell).then((result) => {
+      req.body.cells = [cell];
+      BlockRepo.save(req.body);
+      res.status(201).json({
+        status: 'success',
+        result,
+      });
+    });
+    // res.status(201).json({
+    //   status: 'success',
+    //   // result,
+    // });
+
+    // const result = await
+
+    // await PrisonRepo.save({
+    //   id: req.body.prison,
+    //   ...prison,
+    //   capacity: prison.capacity + req.body.capacity,
+    //   currentOccupancy: prison.currentOccupancy + req.body.currentOccupancy,
+    // });
+
+    // const cellCapacity = Math.floor(result.capacity / result.totalCell);
+    // const extraRemaining = Math.floor(result.capacity % result.totalCell);
+    // try {
+    //   const abc = async () => {
+    //     for (let i = 1; i <= req.body.totalCell; i++) {
+    //       await cellRepo.save({
+    //         cellName: result.blockName + i,
+    //         block: result.id,
+    //         capacity:
+    //           i === req.body.totalCell
+    //             ? cellCapacity + extraRemaining
+    //             : cellCapacity,
+    //         currentOccupancy: 0,
+    //       });
+    //     }
+    //   };
+    //   abc();
+    // } catch (err) {
+    //   console.log(err);
+    // }
   } catch (error) {
     next(new AppError(500, error.message));
   }

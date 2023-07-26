@@ -27,6 +27,7 @@ export class Cell {
   block: Block;
 
   @OneToMany(() => Prisoner, (prisoner) => prisoner.cell, {
+    eager: true,
     cascade: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

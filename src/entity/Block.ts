@@ -27,14 +27,17 @@ export class Block {
   totalCell: number;
 
   @ManyToOne(() => Prison, (prison) => prison.blocks, {
+    onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
     orphanedRowAction: 'delete',
   })
   prison: Prison;
 
-  @OneToMany(() => Cell, (cell) => cell.block)
+  @OneToMany(() => Cell, (cell) => cell.block, {
+    eager: true,
+  })
   cells: Cell[];
 
-  @OneToMany(() => Prisoner, (prisoner) => prisoner.block)
-  prisoners: Prisoner[];
+  // @OneToMany(() => Prisoner, (prisoner) => prisoner.block)
+  // prisoners: Prisoner[];
 }

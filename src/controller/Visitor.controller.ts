@@ -17,9 +17,9 @@ export const getVisitorHandler = async (
   try {
     // Retrieve all instances of the Block entity from BlockRepo
     await VistorRepo.find({
-      relations: {
-        prisoner: true,
-      },
+      // relations: {
+      //   prisoner: true,
+      // },
     })
       .then((result) => {
         // Send a JSON response with a 200 status code and the retrieved data

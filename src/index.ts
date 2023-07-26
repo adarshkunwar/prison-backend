@@ -66,8 +66,8 @@ AppDataSource.initialize()
 
     // custom routes
     app.use('/block', BlockRoutes);
-    app.use('/cell', CellRoutes);
     app.use('/prison', PrisonRoutes);
+    app.use('/cell', CellRoutes);
     app.use('/prisoner', PrisonerRoutes);
     app.use('/staff', StaffRoutes);
     app.use('/visitor', VisitorRoutes);

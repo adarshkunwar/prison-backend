@@ -28,8 +28,8 @@ export class Visitor {
   @Column()
   contactNumber: string;
 
-  @Column()
-  relation: string;
+  // @Column()
+  // relation: string;
 
   @CreateDateColumn()
   dateOfVisit: Date;
