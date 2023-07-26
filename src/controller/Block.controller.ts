@@ -86,10 +86,11 @@ export const postBlockHandler = async (
 
     await cellRepo.save(cell).then(async (result) => {
       req.body.cells = [cell];
-      await BlockRepo.save(req.body);
-      res.status(201).json({
-        status: "success",
-        result,
+      await BlockRepo.save(req.body).then(async (r) => {
+        res.status(201).json({
+          status: "success",
+          result: r,
+        });
       });
     });
     // res.status(201).json({
