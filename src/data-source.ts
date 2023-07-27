@@ -8,11 +8,11 @@ import { User } from './entity/User';
 import { Visitor } from './entity/Visitor';
 
 export const AppDataSource = new DataSource({
-  type: 'mysql',
+  type: 'postgres',
   host: 'localhost',
-  port: 3306,
-  username: 'root',
-  password: '1984',
+  port: 5432,
+  username: 'postgres',
+  password: 'test',
   database: 'prison_management',
   synchronize: true,
   logging: false,

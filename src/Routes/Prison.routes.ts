@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { deletePrisonHandler } from '../controller/prisons/Prisons.delete.controller';
+
 import {
+  createPrisonHandler,
+  deletePrisonHandler,
   getPrisonHandler,
   getSinglePrisonHandler,
-} from '../controller/prisons/Prisons.get.controller';
-import { createPrisonHandler } from '../controller/prisons/Prisons.post.controller';
-import { updatePrisonHandler } from '../controller/prisons/Prisons.put.controller';
+  updatePrisonHandler,
+} from '../controller/Prison.controller';
 
 const router = Router();
 

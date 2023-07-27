@@ -5,6 +5,36 @@ import { Prison } from '../../entity/Prison';
 
 const PrisonRepo = AppDataSource.getRepository(Prison);
 
+// ------------------------------------------------------------------------------------------
+const getCapacity = (object) => {
+  return object.blocks.reduce((val, i) => {
+    return val + i.capacity;
+  }, 0);
+};
+
+const getCurrentOccupancy = (object) => {
+  return object.blocks.reduce((val, i) => {
+    return (
+      val +
+      i.cells.reduce((val, i) => {
+        return val + i.currentOccupancy;
+      }, 0)
+    );
+  }, 0);
+};
+
+const updatePrison = async (prison) => {
+  const capacity = getCapacity(prison);
+  const currentOccupancy = getCurrentOccupancy(prison);
+
+  await PrisonRepo.update(prison.id, {
+    capacity,
+    currentOccupancy,
+  });
+};
+
+// ------------------------------------------------------------------------------------------
+
 const getPrisonHandler = async (
   req: Request,
   res: Response,
@@ -40,9 +70,12 @@ const getSinglePrisonHandler = async (
   try {
     await PrisonRepo.findOneBy({ id: req.params.id })
       .then((result) => {
+        console.log('result');
         if (!result) {
           return new AppError(404, 'No Prison Found');
         }
+        result.capacity = getCapacity(result);
+        result.currentOccupancy = getCurrentOccupancy(result);
         res.status(200).json({
           status: 'success',
           result,

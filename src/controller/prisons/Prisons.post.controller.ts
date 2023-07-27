@@ -14,7 +14,7 @@ const createPrisonHandler = async (
   console.log(req.body);
 
   const date = new Date();
-  const dateStr = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  const dateStr = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
 
   try {
     await PrisonRepo.save({

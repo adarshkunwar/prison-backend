@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { upload } from '../Utils/UploadFile';
-import { getPrisonByIdHandler } from '../controller/Prison.controller';
+// import { getPrisonByIdHandler } from '../controller/Prison.controller';
 import {
   deletePrisonerHandler,
   getPrisonerHandler,
@@ -14,7 +14,7 @@ router.route('/').get(getPrisonerHandler).post(postPrisonerHandler);
 // .post(upload.single('image'), postPrisonerHandler);
 router
   .route('/:id')
-  .get(getPrisonByIdHandler)
+  // .get(getPrisonByIdHandler)
   .put(updatePrisonerHandler)
   .delete(deletePrisonerHandler);
 

@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from "express";
-import AppError from "../Utils/AppError";
-import { AppDataSource } from "../data-source";
-import { Block } from "../entity/Block";
-import { Cell } from "../entity/Cell";
-import { Prison } from "./../entity/Prison";
+import { NextFunction, Request, Response } from 'express';
+import AppError from '../Utils/AppError';
+import { AppDataSource } from '../data-source';
+import { Block } from '../entity/Block';
+import { Cell } from '../entity/Cell';
+import { Prison } from './../entity/Prison';
 
 const BlockRepo = AppDataSource.getRepository(Block);
 const PrisonRepo = AppDataSource.getRepository(Prison);
@@ -20,9 +20,19 @@ export const getBlockHandler = async (
       //   prison: true,
       // },
     });
+    let currentOccupancys = 0;
+    let totalcells = 0;
+    result.map((val, i) => {
+      val.cells.map((items, index) => {
+        currentOccupancys += items.currentOccupancy;
+      });
+      totalcells += val.cells.length;
+    });
     res.status(200).json({
-      status: "success",
+      status: 'success',
       result,
+      currentOccupancys: currentOccupancys,
+      totalcells: totalcells,
     });
   } catch (error) {
     next(new AppError(500, error.message));
@@ -45,10 +55,10 @@ export const getBlockByIdHandler = async (
       // },
     });
     if (!result) {
-      return next(new AppError(404, "Block not found"));
+      return next(new AppError(404, 'Block not found'));
     }
     res.status(200).json({
-      status: "success",
+      status: 'success',
       result,
     });
   } catch (error) {
@@ -68,8 +78,8 @@ export const postBlockHandler = async (
       },
     });
     if (!prison) {
-      console.log("could not find prison with id of" + req.body.prison);
-      return next(new AppError(404, "could not find prison"));
+      console.log('could not find prison with id of' + req.body.prison);
+      return next(new AppError(404, 'could not find prison'));
     }
 
     console.log(req.body);
@@ -88,7 +98,7 @@ export const postBlockHandler = async (
       req.body.cells = [cell];
       await BlockRepo.save(req.body).then(async (r) => {
         res.status(201).json({
-          status: "success",
+          status: 'success',
           result: r,
         });
       });
@@ -138,17 +148,17 @@ export const updateBlockHandler = async (
   next: NextFunction
 ) => {
   try {
-    console.log("update was called");
+    console.log('update was called');
     const block = await BlockRepo.findOneBy({ id: req.params.id });
     if (!block) {
-      return next(new AppError(404, "Block not found"));
+      return next(new AppError(404, 'Block not found'));
     }
 
     Object.assign(block, req.body);
 
     const result = await BlockRepo.save(block);
     res.status(200).json({
-      status: "success",
+      status: 'success',
       result,
     });
   } catch (error) {
@@ -164,7 +174,7 @@ export const deleteBlockHandler = async (
   try {
     const block = await BlockRepo.findOneBy({ id: req.params.id });
     if (!block) {
-      return next(new AppError(404, "Block not found"));
+      return next(new AppError(404, 'Block not found'));
     }
     await BlockRepo.remove(block);
     res.status(204).end();
