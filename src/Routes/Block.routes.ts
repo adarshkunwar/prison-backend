@@ -1,18 +1,18 @@
 import { Router } from 'express';
 import {
+  createBlockHandler,
   deleteBlockHandler,
-  getBlockByIdHandler,
   getBlockHandler,
-  postBlockHandler,
+  getSingleBlockHandler,
   updateBlockHandler,
 } from '../controller/Block.controller';
 
 const router = Router();
 
-router.route('/').get(getBlockHandler).post(postBlockHandler);
+router.route('/').get(getBlockHandler).post(createBlockHandler);
 router
   .route('/:id')
-  .get(getBlockByIdHandler)
+  .get(getSingleBlockHandler)
   .put(updateBlockHandler)
   .delete(deleteBlockHandler);
 

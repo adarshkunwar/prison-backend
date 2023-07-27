@@ -1,11 +1,11 @@
-import { Prison } from '../type';
-const getCapacity = (object: Prison) => {
+import { PrisonType } from '../type';
+const getCapacity = (object: PrisonType) => {
   return object.blocks.reduce((val, i) => {
     return val + i.capacity;
   }, 0);
 };
 
-const getCurrentOccupancy = (object: Prison) => {
+const getCurrentOccupancy = (object: PrisonType) => {
   return object.blocks.reduce((val, i) => {
     return (
       val +
@@ -17,7 +17,7 @@ const getCurrentOccupancy = (object: Prison) => {
 };
 
 // sample data
-const data: Prison = {
+const data: PrisonType = {
   id: 'ad9fa05b-bb8b-4d43-b550-64c99fa062fa',
   name: 'prison 2',
   address: 'add 3',

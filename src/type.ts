@@ -1,31 +1,31 @@
-export interface Prison {
+export interface PrisonType {
   id: string;
   name: string;
   address: string;
   capacity: number;
   currentOccupancy: number;
   createdDate: string;
-  blocks: Block[];
+  blocks: BlockType[];
 }
 
-export interface Block {
+export interface BlockType {
   id: string;
   capacity: number;
   currentOccupancy: number;
   blockName: string;
   totalCell: number;
-  cells: Cell[];
+  cells: CellType[];
 }
 
-export interface Cell {
+export interface CellType {
   id: number;
   cellName: string;
   capacity: number;
   currentOccupancy: number;
-  prisoners: Prisoner[];
+  prisoners: PrisonerType[];
 }
 
-export interface Prisoner {
+export interface PrisonerType {
   id: string;
   firstName: string;
   lastName: string;

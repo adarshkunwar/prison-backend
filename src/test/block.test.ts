@@ -1,17 +1,17 @@
-import { Block } from '../type';
+import { BlockType } from '../type';
 
-const getCurrentOccupancy = (object: Block) => {
+const getCurrentOccupancy = (object: BlockType) => {
   return object.cells.reduce((val, i) => {
     return val + i.currentOccupancy;
   }, 0);
 };
 
-const getCells = (object: Block) => {
+const getCells = (object: BlockType) => {
   return object.cells.length;
 };
 
 // sample data
-const data: Block = {
+const data: BlockType = {
   id: '108539fb-5610-4663-bb2f-231d1426b3bc',
   capacity: 40,
   currentOccupancy: 23,
