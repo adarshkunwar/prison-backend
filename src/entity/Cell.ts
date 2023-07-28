@@ -26,6 +26,10 @@ export class Cell {
   @ManyToOne(() => Block, (block) => block.cells)
   block: Block;
 
+  // TODO: Add status field
+  // @Column()
+  // status: 'filled' | 'empty' | 'partial';
+
   @OneToMany(() => Prisoner, (prisoner) => prisoner.cell, {
     eager: true,
     cascade: true,

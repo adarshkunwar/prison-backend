@@ -3,81 +3,84 @@ import AppError from '../Utils/AppError';
 import { AppDataSource } from '../data-source';
 import { Block } from '../entity/Block';
 import { Cell } from '../entity/Cell';
-import { Prison } from '../entity/Prison';
 
 const CellRepo = AppDataSource.getRepository(Cell);
 const BlockRepo = AppDataSource.getRepository(Block);
-const PrisonRepo = AppDataSource.getRepository(Prison);
+
+// ------------------------------------------------------------------------------------------
+
+const getCurrentOccupancy = (object) => {
+  return object.currentOccupancy;
+};
+
+const getCapacity = (object) => {
+  return object.capacity;
+};
+
+const checkBlock = (object, newData) => {
+  const capacity = getCapacity(object);
+  const currentOccupancy = getCurrentOccupancy(object);
+  const availableCapacityBlock = capacity - currentOccupancy;
+  if (newData.capacity > availableCapacityBlock) return false;
+  else return true;
+};
+
+// ------------------------------------------------------------------------------------------
 
 export const getCellHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log('---------------Cell get Started ---------------');
   try {
-    await CellRepo.find({
-      // relations: {
-      //   block: true,
-      // },
-    })
-      .then((result) => {
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        next(new AppError(error.statusCode, error.message));
-      });
+    const result = await CellRepo.find();
+    if (!result) return next(new AppError(404, 'No Cell Found'));
+
+    res.status(200).json({
+      status: 'success',
+      result,
+    });
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, error.message));
   }
+  console.log('---------------Cell get Ended ---------------');
 };
 
-export const getCellByIdHandler = async (
+export const getSingleCellHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log('---------------Cell get Single Started ---------------');
   try {
-    await CellRepo.findOne({
-      where: {
-        id: req.params.id,
-      },
-      // relations: {
-      //   block: true,
-      //   prisoners: true,
-      // },
-    })
-      .then((result) => {
-        if (!result) {
-          return next(new AppError(404, 'Cell not found'));
-        }
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        next(new AppError(error.statusCode, error.message));
-      });
+    const result = await CellRepo.findOneBy({ id: req.params.id });
+    if (!result) return next(new AppError(404, 'No Cell Found'));
+    res.status(200).json({
+      status: 'success',
+      result,
+    });
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, error.message));
   }
+  console.log('---------------Cell get Single Ended ---------------');
 };
 
-export const postCellHandler = async (
+export const createCellHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log('---------------Cell Create Started ---------------');
   try {
-    console.log(req.body);
-    if (req.body.currentOccupancy > req.body.capacity) {
+    const block = await BlockRepo.findOneBy({ id: req.body.blockId });
+    if (!block) return next(new AppError(404, 'No Block Found By this ID'));
+
+    if (!checkBlock(block, req.body))
       return next(
-        new AppError(400, 'Current occupancy cannot be greater than capacity')
+        new AppError(400, 'Capacity cannot be greater than block capacity')
       );
-    }
+
     await CellRepo.save(req.body)
       .then((result) => {
         res.status(200).json({
@@ -89,8 +92,9 @@ export const postCellHandler = async (
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, error.message));
   }
+  console.log('---------------Cell Create Ended ---------------');
 };
 
 export const updateCellHandler = async (
@@ -98,22 +102,20 @@ export const updateCellHandler = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log('---------------Cell Update Started ---------------');
   try {
-    let service = await CellRepo.findOneBy({ id: req.params.id });
+    const block = await BlockRepo.findOneBy({ id: req.body.blockId });
+    let cell = await CellRepo.findOneBy({ id: req.params.id });
+    if (!cell) return next(new AppError(404, 'No Cell Found By this ID'));
 
-    if (!service) {
-      return next(new AppError(404, 'Cell not found'));
-    }
-
-    if (req.body.currentOccupancy > req.body.capacity) {
+    if (!checkBlock(block, req.body))
       return next(
-        new AppError(400, 'Current occupancy cannot be greater than capacity')
+        new AppError(400, 'Capacity cannot be greater than block capacity')
       );
-    }
 
-    Object.assign(service, req.body);
+    Object.assign(cell, req.body);
 
-    await CellRepo.save(service)
+    await CellRepo.save(cell)
       .then((result) => {
         res.status(200).json({
           status: 'success',
@@ -124,8 +126,9 @@ export const updateCellHandler = async (
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, error.message));
   }
+  console.log('---------------Cell Update Ended ---------------');
 };
 
 export const deleteCellHandler = async (
@@ -133,26 +136,13 @@ export const deleteCellHandler = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log('---------------Cell Delete Started ---------------');
   try {
-    const cell = await CellRepo.find({
-      where: {
-        id: req.params.id,
-      },
-      // relations: {
-      //   block: true,
-      // },
-    });
-    if (!cell) {
-      return next(new AppError(404, 'cell not found'));
-    }
+    const cell = await CellRepo.findOneBy({ id: req.params.id });
+    if (!cell) return next(new AppError(404, 'No Cell Found By this ID'));
+
     await CellRepo.remove(cell)
-      .then(async (result) => {
-        console.log(result);
-        await BlockRepo.update(result[0].block.id, {
-          capacity: result[0].block.capacity - result[0].capacity,
-          currentOccupancy:
-            result[0].block.currentOccupancy - result[0].currentOccupancy,
-        });
+      .then((result) => {
         res.status(200).json({
           status: 'success',
           result,
@@ -162,6 +152,7 @@ export const deleteCellHandler = async (
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, error.message));
   }
+  console.log('---------------Cell Delete Started ---------------');
 };

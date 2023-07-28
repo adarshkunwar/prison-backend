@@ -1,18 +1,19 @@
 import { Router } from 'express';
+
 import {
+  createCellHandler,
   deleteCellHandler,
-  getCellByIdHandler,
   getCellHandler,
-  postCellHandler,
+  getSingleCellHandler,
   updateCellHandler,
 } from '../controller/Cell.controller';
 
 const router = Router();
 
-router.route('/').get(getCellHandler).post(postCellHandler);
+router.route('/').get(getCellHandler).post(createCellHandler);
 router
   .route('/:id')
-  .get(getCellByIdHandler)
+  .get(getSingleCellHandler)
   .put(updateCellHandler)
   .delete(deleteCellHandler);
 
