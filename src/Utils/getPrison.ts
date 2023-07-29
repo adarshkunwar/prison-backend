@@ -1,7 +1,6 @@
 import AppError from '../Utils/AppError';
 import { AppDataSource } from '../data-source';
 import { Prison } from '../entity/Prison';
-import { PrisonType } from '../type';
 
 const PrisonRepo = AppDataSource.getRepository(Prison);
 

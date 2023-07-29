@@ -1,5 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import AppError from '../Utils/AppError';
+import { consoleLog, getDate } from '../Utils/date';
+import sendUpdatedBlock from '../Utils/getBlock';
+import sendUpdatedPrison from '../Utils/getPrison';
 import { AppDataSource } from '../data-source';
 import { Block } from '../entity/Block';
 import { Prison } from './../entity/Prison';
@@ -7,56 +10,48 @@ import { Prison } from './../entity/Prison';
 const BlockRepo = AppDataSource.getRepository(Block);
 const PrisonRepo = AppDataSource.getRepository(Prison);
 
-// ------------------------------------------------------------------------------------------
-
-const getCurrentOccupancy = (object) => {
-  return object.cells.reduce((val, i) => {
-    return val + i.currentOccupancy;
-  }, 0);
-};
-
-const getCells = (object) => {
-  return object.cells.length;
-};
-
-const updateBlockSimple = async (block, id) => {
-  const data = await BlockRepo.findOneBy({ id });
-  if (!data) return new AppError(404, 'No Block Found');
-  const currentOccupancy = getCurrentOccupancy(data);
-  const totalCell = getCells(data);
-  await BlockRepo.save({
-    ...block,
-    currentOccupancy,
-    totalCell,
-  })
-    .then((result) => {
-      console.log(result);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
-};
-
-// ------------------------------------------------------------------------------------------
-
-const getBlockHandler = async (
+export const getBlockHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Block get Single Started ---------------');
+  consoleLog('Block get Started');
   try {
-    const result = await BlockRepo.find({
-      relations: ['prison', 'cells'],
-    });
+    const result = await BlockRepo.find();
     if (!result) return next(new AppError(404, 'No Block Found'));
-    result.map((val) => {
-      val.currentOccupancy = getCurrentOccupancy(val);
-      val.totalCell = getCells(val);
-    });
+
+    const newBlock = [];
+
+    for (let i = 0; i < result.length; i++) {
+      const block = await sendUpdatedBlock(result[i].id);
+      newBlock.push(block);
+    }
+
     res.status(200).json({
       status: 'success',
-      result,
+      result: newBlock,
+    });
+  } catch (error) {
+    next(new AppError(500, error.message));
+  }
+  consoleLog('Block get Ended');
+};
+
+export const getSingleBlockHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  consoleLog('Block get Single Started');
+  try {
+    const oldPrison = await BlockRepo.findOneBy({ id: req.params.id });
+    if (!oldPrison) return next(new AppError(404, 'No Block Found'));
+
+    const newPrison = await sendUpdatedBlock(req.params.id);
+
+    res.status(200).json({
+      status: 'success',
+      result: newPrison,
     });
   } catch (error) {
     next(new AppError(500, error.message));
@@ -64,75 +59,55 @@ const getBlockHandler = async (
   console.log('---------------Block get Single End ---------------');
 };
 
-const getSingleBlockHandler = async (
+export const createBlockHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Block get Single Started ---------------');
+  consoleLog('Block Create Started');
   try {
-    await BlockRepo.findOneBy({ id: req.params.id })
-      .then((result) => {
-        if (!result) return next(new AppError(404, 'No Block Found'));
-        result.currentOccupancy = getCurrentOccupancy(result);
-        result.totalCell = getCells(result);
+    const prison = await PrisonRepo.findOneBy({ id: req.body.prisonId });
+    if (!prison) return next(new AppError(404, 'Prison not found'));
+
+    console.log(req.body);
+    const data = await BlockRepo.save({
+      ...req.body,
+      capacity: parseInt(req.body.capacity),
+      totalCell: req.body.totalCell ? parseInt(req.body.totalCell) : 0,
+      createdDate: getDate(),
+      currentOccupancy: 0,
+    })
+      .then((result) =>
         res.status(200).json({
           status: 'success',
           result,
-        });
-        updateBlockSimple(result, req.params.id);
-      })
-      .catch((error) => {
-        next(new AppError(400, error.message));
-      });
-  } catch (error) {
-    next(new AppError(500, error.message));
-  }
-  console.log('---------------Block get Single End ---------------');
-};
-
-const createBlockHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  console.log('---------------Block Create Started ---------------');
-  try {
-    const prison = await PrisonRepo.findOneBy({ id: req.body.prison });
-    if (!prison) return next(new AppError(404, 'No Prison Found'));
-
-    await BlockRepo.save({
-      ...req.body,
-      totalCell: 0,
-      currentOccupancy: 0,
-    })
-      .then(async (result) => {
-        res.status(201).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        return next(new AppError(400, error.message));
-      });
+        })
+      )
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
+    console.log(data);
   } catch (error) {
     return next(new AppError(500, error.message));
   }
-  console.log('---------------Block Create End ---------------');
+  consoleLog('Block Create Ended');
 };
 
-const updateBlockHandler = async (
+export const updateBlockHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Block Update Started ---------------');
+  consoleLog('Block Update Started');
   try {
     const block = await BlockRepo.findOneBy({ id: req.params.id });
-    if (!block) {
-      return next(new AppError(404, 'Block not found'));
-    }
-    Object.assign(block, req.body);
+    if (!block) return next(new AppError(404, 'Block not found'));
+
+    Object.assign(block, {
+      ...req.body,
+      capacity: parseInt(req.body.capacity),
+      currentOccupancy: req.body.currentOccupancy
+        ? parseInt(req.body.currentOccupancy)
+        : block.currentOccupancy,
+    });
     await BlockRepo.save(block)
       .then(async (result) => {
         res.status(200).json({
@@ -146,15 +121,15 @@ const updateBlockHandler = async (
   } catch (error) {
     return next(new AppError(500, error.message));
   }
-  console.log('---------------Block Update Ended ---------------');
+  consoleLog('Block Update Ended');
 };
 
-const deleteBlockHandler = async (
+export const deleteBlockHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Block Delete Started ---------------');
+  consoleLog('Block Delete Started');
   try {
     const block = await BlockRepo.findOneBy({ id: req.params.id });
     if (!block) return next(new AppError(404, 'No Block Found'));
@@ -171,13 +146,5 @@ const deleteBlockHandler = async (
   } catch (error) {
     return next(new AppError(500, error.message));
   }
-  console.log('---------------Block Delete Ended ---------------');
-};
-
-export {
-  createBlockHandler,
-  deleteBlockHandler,
-  getBlockHandler,
-  getSingleBlockHandler,
-  updateBlockHandler,
+  consoleLog('Block Delete Ended');
 };
