@@ -1,122 +1,70 @@
 import { NextFunction, Request, Response } from 'express';
 import AppError from '../Utils/AppError';
+import { consoleLog, getDate } from '../Utils/date';
+import sendUpdatedPrison from '../Utils/getPrison';
 import { AppDataSource } from '../data-source';
 import { Prison } from '../entity/Prison';
-
 const PrisonRepo = AppDataSource.getRepository(Prison);
 
-// ------------------------------------------------------------------------------------------
+export const getPrisonHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  consoleLog('Prison get Started');
+  try {
+    const prison = await PrisonRepo.find();
+    if (!prison) return new AppError(404, 'No Prison Found');
 
-const getCapacity = (object) => {
-  return object.blocks.reduce((val, i) => {
-    return val + i.capacity;
-  }, 0);
-};
+    const newPrison = [];
+    for (let i = 0; i < prison.length; i++) {
+      const updatedPrison = await sendUpdatedPrison(prison[i].id);
+      newPrison.push(updatedPrison);
+    }
 
-const getCurrentOccupancy = (object) => {
-  return object.blocks.reduce((val, i) => {
-    return (
-      val +
-      i.cells.reduce((val, i) => {
-        return val + i.currentOccupancy;
-      }, 0)
-    );
-  }, 0);
-};
-
-const getDate = () => {
-  const date = new Date();
-  const dateStr = `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
-  return dateStr;
-};
-
-const updatePrisonSimple = async (prison, id) => {
-  const data = await PrisonRepo.findOneBy({ id });
-  if (!data) return new AppError(404, 'No Prison Found');
-  const capacity = getCapacity(data);
-  const currentOccupancy = getCurrentOccupancy(data);
-  await PrisonRepo.save({
-    ...prison,
-    capacity,
-    currentOccupancy,
-  })
-    .then((result) => {
-      console.log('result');
-    })
-    .catch((error) => {
-      console.log(error);
+    res.status(200).json({
+      status: 'success',
+      result: newPrison,
     });
-};
-
-// ------------------------------------------------------------------------------------------
-
-const getPrisonHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  console.log('---------------Prison get Single Started ---------------');
-  try {
-    await PrisonRepo.find()
-      .then((result) => {
-        if (!result) {
-          return new AppError(404, 'No Prison Found');
-        }
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        next(new AppError(error.statusCode, error.message));
-      });
   } catch (error) {
-    return next(new AppError(error.statusCode, error.message));
+    return next(new AppError(502, error.message));
   }
-  console.log('---------------Prison get Single Ended ---------------');
 };
 
-const getSinglePrisonHandler = async (
+export const getSinglePrisonHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Prison get Single Started ---------------');
+  consoleLog('Prison get Single Started');
   try {
-    await PrisonRepo.findOneBy({ id: req.params.id })
-      .then((result) => {
-        console.log('result');
-        if (!result) {
-          return new AppError(404, 'No Prison Found');
-        }
-        result.capacity = getCapacity(result);
-        result.currentOccupancy = getCurrentOccupancy(result);
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-        updatePrisonSimple(result, req.params.id);
-      })
-      .catch((error) => {
-        return next(new AppError(error.statusCode, error.message));
-      });
+    const singlePrison = await PrisonRepo.findOneBy({ id: req.params.id });
+    if (!singlePrison) return new AppError(404, 'No Prison Found');
+
+    const updatedPrison = await sendUpdatedPrison(req.params.id);
+
+    res.status(200).json({
+      status: 'success',
+      result: updatedPrison,
+    });
   } catch (err) {
     return next(new AppError(err.statusCode, err.message));
   }
-  console.log('---------------Prison get Single Ended ---------------');
+  consoleLog('Prison get Single Ended');
 };
 
-const createPrisonHandler = async (
+export const createPrisonHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Prison Create Started---------------');
+  consoleLog('Prison Create Started');
   try {
     await PrisonRepo.save({
       ...req.body,
       capacity: 0,
       currentOccupancy: 0,
+      description: req.body.description || 'No description provided',
       createdDate: getDate(),
     })
       .then((result) =>
@@ -125,19 +73,19 @@ const createPrisonHandler = async (
           result,
         })
       )
-      .catch((error) => next(new AppError(error.statusCode, error.message)));
+      .catch(() => next(new AppError(504, 'could not save new prison')));
   } catch (err) {
-    return next(new AppError(err.statusCode, err.message));
+    return next(new AppError(500, 'some error occured'));
   }
-  console.log('---------------Prison Create Ended---------------');
+  consoleLog('Prison Create Ended');
 };
 
-const updatePrisonHandler = async (
+export const updatePrisonHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Prison Update Started---------------');
+  consoleLog('Prison Update Started');
   try {
     let prison = await PrisonRepo.findOneBy({ id: req.params.id });
     if (!prison) return next(new AppError(404, 'Prison not found'));
@@ -158,20 +106,20 @@ const updatePrisonHandler = async (
   } catch (error) {
     next(new AppError(error.statusCode, error.message));
   }
-  console.log('---------------Prison Update Ended---------------');
+  consoleLog('Prison Update Ended');
 };
 
-const deletePrisonHandler = async (
+export const deletePrisonHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.log('---------------Prison Delete Started---------------');
+  consoleLog('Prison Delete Started');
   try {
     const prison = await PrisonRepo.findOneBy({ id: req.params.id });
     if (!prison) return next(new AppError(404, 'Prison not found'));
 
-    await PrisonRepo.delete(prison)
+    await PrisonRepo.remove(prison)
       .then((result: any) => {
         res.status(200).json({
           status: 'success',
@@ -182,16 +130,7 @@ const deletePrisonHandler = async (
         next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    console.log(error, 'jjhj');
     next(new AppError(error.statusCode, error.message));
   }
-  console.log('---------------Prison Delete Ended---------------');
-};
-
-export {
-  createPrisonHandler,
-  deletePrisonHandler,
-  getPrisonHandler,
-  getSinglePrisonHandler,
-  updatePrisonHandler,
+  consoleLog('Prison Delete Ended');
 };

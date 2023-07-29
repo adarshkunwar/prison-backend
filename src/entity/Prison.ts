@@ -1,6 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Block } from './Block';
-import { Prisoner } from './Prisoner';
 import { Staff } from './Staff';
 
 @Entity()
@@ -23,6 +22,9 @@ export class Prison {
   @Column()
   createdDate: string;
 
+  @Column()
+  description: string;
+
   @OneToMany(() => Block, (block) => block.prison, {
     eager: true,
     cascade: ['remove'],
@@ -30,4 +32,12 @@ export class Prison {
     onUpdate: 'CASCADE',
   })
   blocks: Block[];
+
+  @OneToMany(() => Staff, (staff) => staff.prison, {
+    eager: true,
+    cascade: ['remove'],
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  staffs: Staff[];
 }

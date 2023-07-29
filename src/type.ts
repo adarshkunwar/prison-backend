@@ -5,7 +5,8 @@ export interface PrisonType {
   capacity: number;
   currentOccupancy: number;
   createdDate: string;
-  blocks: BlockType[];
+  description: string;
+  blocks?: BlockType[];
 }
 
 export interface BlockType {
@@ -36,5 +37,5 @@ export interface PrisonerType {
   dateOfRelease: string;
   crime: string;
   latestVisit: string;
-  visitors: any[]; // You can replace 'any' with a specific type for visitors if available
+  visitors: any[];
 }

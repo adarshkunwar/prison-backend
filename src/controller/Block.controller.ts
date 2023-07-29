@@ -46,7 +46,9 @@ const getBlockHandler = async (
 ) => {
   console.log('---------------Block get Single Started ---------------');
   try {
-    const result = await BlockRepo.find();
+    const result = await BlockRepo.find({
+      relations: ['prison', 'cells'],
+    });
     if (!result) return next(new AppError(404, 'No Block Found'));
     result.map((val) => {
       val.currentOccupancy = getCurrentOccupancy(val);

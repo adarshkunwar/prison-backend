@@ -1,10 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 import { Prisoner } from './Prisoner';
 
@@ -31,9 +25,13 @@ export class Visitor {
   // @Column()
   // relation: string;
 
-  @CreateDateColumn()
-  dateOfVisit: Date;
+  @Column()
+  dateOfVisit: string;
 
-  @ManyToOne(() => Prisoner, (prisoner) => prisoner.visitors)
+  @ManyToOne(() => Prisoner, (prisoner) => prisoner.visitors, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   prisoner: Prisoner;
 }

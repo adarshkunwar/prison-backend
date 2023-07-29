@@ -11,7 +11,7 @@ import { Prisoner } from './Prisoner';
 
 @Entity()
 export class Cell {
-  @PrimaryGeneratedColumn('increment')
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
@@ -23,12 +23,18 @@ export class Cell {
   @Column()
   currentOccupancy: number;
 
-  @ManyToOne(() => Block, (block) => block.cells)
+  @Column()
+  createdDate: string;
+
+  @ManyToOne(() => Block, (block) => block.cells, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
   block: Block;
 
-  // TODO: Add status field
-  // @Column()
-  // status: 'filled' | 'empty' | 'partial';
+  @Column()
+  status: 'filled' | 'empty' | 'partial';
 
   @OneToMany(() => Prisoner, (prisoner) => prisoner.cell, {
     eager: true,

@@ -1,10 +1,4 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Prison } from './Prison';
 
 @Entity()
@@ -27,8 +21,8 @@ export class Staff {
   @Column()
   contactNumber: string;
 
-  @CreateDateColumn()
-  dateOfJoining: Date;
+  @Column()
+  dateOfJoining: string;
 
   @Column()
   salary: number;
@@ -36,6 +30,10 @@ export class Staff {
   @Column()
   designation: string;
 
-  // @ManyToOne(() => Prison, (prison) => prison.staffs)
-  // prison: Prison;
+  @ManyToOne(() => Prison, (prison) => prison.staffs, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
+  })
+  prison: Prison;
 }

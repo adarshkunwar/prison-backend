@@ -1,246 +1,194 @@
-import { NextFunction, Request, Response } from "express";
-import AppError from "../Utils/AppError";
-import { AppDataSource } from "../data-source";
-import { Block } from "../entity/Block";
-import { Cell } from "../entity/Cell";
-import { Prison } from "../entity/Prison";
-import { Prisoner } from "../entity/Prisoner";
+import { NextFunction, Request, Response } from 'express';
+import AppError from '../Utils/AppError';
+import { AppDataSource } from '../data-source';
+import { Cell } from '../entity/Cell';
+import { Prisoner } from '../entity/Prisoner';
+// import { Block } from '../entity/Block';
+// import { Prison } from '../entity/Prison';
 
 const PrisonerRepo = AppDataSource.getRepository(Prisoner);
 const cellRepo = AppDataSource.getRepository(Cell);
-const blockRepo = AppDataSource.getRepository(Block);
-const prisonRepo = AppDataSource.getRepository(Prison);
+// const blockRepo = AppDataSource.getRepository(Block);
+// const prisonRepo = AppDataSource.getRepository(Prison);
+
+// ----------------------------------------------------------------------------------------
+const check = (cell) => {
+  if (cell.currentOccupancy < cell.capacity) {
+    return true;
+  }
+  return false;
+};
+const createConsole = (message) => {
+  const string = `----------${message}----------`;
+  return string;
+};
+
+const getData = async (id) => {
+  const data = await cellRepo.findOne({
+    where: { id },
+    relations: ['cell'],
+  });
+  return data;
+};
+// ----------------------------------------------------------------------------------------
 
 export const getPrisonerHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log(createConsole('get Prisoner Started'));
   try {
-    // Retrieve all instances of the Block entity from BlockRepo
     await PrisonerRepo.find({
-      // relations: {
-      //   cell: true,
-      // },
+      relations: ['cell'],
     })
       .then((result) => {
-        // Send a JSON response with a 200 status code and the retrieved data
-        res.status(200).json({
-          status: "success",
+        if (!result) return next(new AppError(404, 'Prisoner not found'));
+        return res.status(200).json({
+          status: 'success',
           result,
         });
       })
       .catch((error) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
+        return next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
+  console.log(createConsole('get Prisoner Ended'));
 };
 
-export const getPrisonerByIdHandler = async (
+// ----------------------------------------------------------------------------------------
+
+export const getSinglePrisonerHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log(createConsole('get single prisoner started' + req.params.id));
   try {
-    // Retrieve the existing Block entity based on the id provided in the request parameters
-    await PrisonerRepo.findOneBy({ id: req.params.id })
+    await PrisonerRepo.find({
+      where: { id: req.params.id },
+      relations: ['cell'],
+    })
       .then((result) => {
-        if (!result) {
-          // If no Block instance is found, pass an error to the error-handling middleware using the AppError class
-          return next(new AppError(404, "Prisoner not found"));
-        }
-        // Send a JSON response with a 200 status code and the retrieved data
-        res.status(200).json({
-          status: "success",
+        if (!result) return next(new AppError(404, 'Prisoner not found'));
+        return res.status(200).json({
+          status: 'success',
           result,
         });
       })
       .catch((error) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
+        return next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
+  console.log(createConsole('get single prisoner ended' + req.params.id));
 };
 
-export const postPrisonerHandler = async (
+// ----------------------------------------------------------------------------------------
+
+export const createPrisonerHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log(createConsole('create prisoner start'));
   try {
-    console.log(req.body);
-    // retrieve exisiting cell from cellRepo
-    const cell = await cellRepo.find({
-      where: {
-        id: req.body.cell,
-      },
-      relations: {
-        block: true,
-      },
-    });
-    console.log("CELLL", cell);
+    const data = await cellRepo.findOneBy({ id: req.body.cell });
 
-    if (!cell) {
-      return next(new AppError(404, "Cell not found"));
-    }
-    // if (cell[0].currentOccupancy >= cell[0].capacity) {
-    //   return next(new AppError(404, 'Cell is full'));
-    // } else {
-    // starting to save the prisoner
-    const newCell = [...cell[0].prisoners];
+    if (!data) return next(new AppError(404, 'Cell not found'));
+    if (!check(data)) return next(new AppError(404, 'Cell is full'));
+
     await PrisonerRepo.save({
       ...req.body,
       age: parseInt(req.body.age),
       contactNumber: parseInt(req.body.contactNumber),
-    })
-      .then(async (result) => {
-        newCell.push(result);
-        console.log(
-          "NEW CELL--------------------------------------fjawkf",
-          newCell
-        );
-        await cellRepo
-          .save({
-            ...cell[0],
-            prisoners: newCell,
-            currentOccupancy: cell[0].currentOccupancy + 1,
-          })
-          .then(async (result) => {
-            console.log("109999999999", result);
-            const currentBlock = await blockRepo.findOne({
-              where: {
-                id: result.block.id,
-              },
-              relations: {
-                prison: true,
-              },
-            });
-            currentBlock.currentOccupancy += 1;
-            await blockRepo.save(currentBlock).then(async (blockResult) => {
-              const prisonResult = await prisonRepo.findOneBy({
-                id: blockResult.prison.id,
-              });
-              prisonResult.currentOccupancy += 1;
-              await prisonRepo.save(prisonResult);
-            });
-            console.log("BLOCK IS THISSSSSSS", result);
-            // await blockRepo.save({
-            //   id: result.block.id,
-            //   currentOccupancy: cell[0].currentOccupancy + 1,
-            // })
+    }).then(async (result) => {
+      if (!result) return next(new AppError(404, 'Prisoner not found'));
+      Object.assign(result, { cell: data });
+      await cellRepo
+        .save({
+          ...data,
+          currentOccupancy: data.currentOccupancy + 1,
+          prisoners: [...data.prisoners, result],
+        })
+        .then(async (result) => {
+          res.status(200).json({
+            status: 'success',
+            result,
           });
-        // update the cell occupancy by 1 and also update block occupancy and prison occupancy
-        res.status(200).json({
-          status: "success",
-          result,
+        })
+        .catch((error) => {
+          return next(new AppError(error.statusCode, error.message));
         });
-      })
-      .catch((error) => {
-        console.log("ERROR", error);
-        next(new AppError(error.statusCode, error.message));
-      });
-    // everything is done
-    console.log("Prisoner is added");
-    // }
+    });
   } catch (error) {
-    console.log("-------------------");
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
+  console.log(createConsole('create prisoner ended'));
 };
 
-// export const postPrisonerHandler = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   console.log(req, 'req');
-//   // console.log(req.body);
-//   try {
-//     console.log(
-//       '------------------------Prisoner Post Starts Here----------------------'
-//     );
-//     console.log(req.body);
+// ----------------------------------------------------------------------------------------
 
-//     const cell = await cellRepo.findOneBy({ id: req.params.id });
-//     if (!cell) return next(new AppError(404, 'Cell Not Found'));
+// ----------------------------------------------------------------------------------------
 
-//     await PrisonerRepo.save({
-//       ...req.body,
-//       id: parseInt(req.body.id),
-//       contactNumber: parseInt(req.body.contactNumber),
-//     }).then((result) => {
-//       console.log(result);
-//       res.status(200).json({
-//         status: 'success',
-//         result,
-//       });
-//     });
-//   } catch (error) {
-//     console.log('try catch error');
-//     return next(new AppError(error.statusCode, error.message));
-//   }
-// };
-
-/**
- * Handler for PATCH/PUT request to update a Block instance.
- */
 export const updatePrisonerHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  console.log(createConsole('move prisoner started'));
   try {
-    let service = await PrisonerRepo.findOneBy({ id: req.params.id });
-    if (!service) {
-      return next(new AppError(404, "Block not found"));
+    const cellNew = await cellRepo.findOneBy({ id: req.body.cell });
+    if (!cellNew) return next(new AppError(404, 'Cell not found'));
+
+    const data = await PrisonerRepo.findOne({
+      where: { id: req.params.id },
+      relations: ['cell'],
+    });
+    if (!data) return next(new AppError(404, 'Prisoner not found'));
+
+    const cellOld = await cellRepo.findOneBy({ id: data.cell.id });
+    console.log(cellOld.id, cellNew.id);
+    if (cellOld.id !== cellNew.id) {
+      cellOld.currentOccupancy -= 1;
+      cellNew.currentOccupancy += 1;
+
+      cellOld.prisoners.filter((val) => val.id !== req.params.id);
+      cellNew.prisoners = [...cellNew.prisoners, data];
+
+      Object.assign(cellOld, req.body);
+      await cellRepo.save(cellOld).catch((error) => {
+        return next(new AppError(error.statusCode, error.message));
+      });
+
+      Object.assign(cellNew, req.body);
+      await cellRepo.save(cellNew).catch((error) => {
+        return next(new AppError(error.statusCode, error.message));
+      });
     }
 
-    let prisoner = [];
-    req.body.service.map((item) => {
-      let data = JSON.parse(item);
-      return prisoner.push(data);
-    });
-
-    // Reassign the req.body.service property with the updated product array
-    req.body.service = [...prisoner];
-
-    console.log(req.body);
-
-    // Update the existing Block entity with the properties from req.body using Object.assign
-    Object.assign(service, req.body);
-
-    // Save the modified Block entity using the save method of BlockRepo
-    await PrisonerRepo.save(service)
+    Object.assign(data, req.body);
+    PrisonerRepo.save(data)
       .then((result) => {
-        // Send a JSON response with a 200 status code and the saved data
+        if (!result) return next(new AppError(404, 'Prisoner not found'));
         res.status(200).json({
-          status: "success",
+          status: 'success',
           result,
         });
       })
       .catch((error) => {
-        // If an error occurs, send a JSON response with a 500 status code and the error
-        res.status(500).json({
-          status: "error",
-          error,
-        });
+        return next(new AppError(error.statusCode, error.message));
       });
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
 };
 
-/**
- * Handler for DELETE request to remove a Block instance.
- */
+// ----------------------------------------------------------------------------------------
+// TODO: yet to work on delete
 export const deletePrisonerHandler = async (
   req: Request,
   res: Response,
@@ -252,7 +200,7 @@ export const deletePrisonerHandler = async (
 
     if (!Service) {
       // If the Block entity is not found, pass a 404 status code and "Block not found" message to the error-handling middleware
-      return next(new AppError(404, "Block not found"));
+      return next(new AppError(404, 'Block not found'));
     }
 
     // Remove the Block entity using the remove method of BlockRepo
@@ -261,7 +209,7 @@ export const deletePrisonerHandler = async (
         console.log(result);
         // Send a JSON response with a 200 status code and the removed data
         res.status(200).json({
-          status: "success",
+          status: 'success',
           result,
         });
       })

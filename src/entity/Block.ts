@@ -7,7 +7,6 @@ import {
 } from 'typeorm';
 import { Cell } from './Cell';
 import { Prison } from './Prison';
-import { Prisoner } from './Prisoner';
 
 @Entity()
 export class Block {
@@ -21,10 +20,13 @@ export class Block {
   currentOccupancy: number;
 
   @Column()
-  blockName: string;
+  name: string;
 
   @Column()
   totalCell: number;
+
+  @Column()
+  createdDate: string;
 
   @ManyToOne(() => Prison, (prison) => prison.blocks, {
     onUpdate: 'CASCADE',
@@ -35,9 +37,9 @@ export class Block {
 
   @OneToMany(() => Cell, (cell) => cell.block, {
     eager: true,
+    cascade: ['remove'],
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   cells: Cell[];
-
-  // @OneToMany(() => Prisoner, (prisoner) => prisoner.block)
-  // prisoners: Prisoner[];
 }

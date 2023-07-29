@@ -23,6 +23,7 @@ const data: PrisonType = {
   address: 'add 3',
   capacity: 40,
   currentOccupancy: 23,
+  description: 'desc 3',
   createdDate: '2023-6-26',
   blocks: [
     {

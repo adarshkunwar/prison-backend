@@ -10,7 +10,9 @@ const BlockRepo = AppDataSource.getRepository(Block);
 // ------------------------------------------------------------------------------------------
 
 const getCurrentOccupancy = (object) => {
-  return object.currentOccupancy;
+  let currentOccupancy = 0;
+  console.log(object.prisoners, 'prisoner');
+  return object.prisoners.length;
 };
 
 const getCapacity = (object) => {
@@ -23,6 +25,15 @@ const checkBlock = (object, newData) => {
   const availableCapacityBlock = capacity - currentOccupancy;
   if (newData.capacity > availableCapacityBlock) return false;
   else return true;
+};
+
+const updateBlock = async (id) => {
+  const cell = await CellRepo.findOneBy({ id });
+  const currentOccupancy = getCurrentOccupancy(cell);
+
+  cell.currentOccupancy = currentOccupancy;
+
+  await CellRepo.save(cell);
 };
 
 // ------------------------------------------------------------------------------------------
@@ -56,9 +67,10 @@ export const getSingleCellHandler = async (
   try {
     const result = await CellRepo.findOneBy({ id: req.params.id });
     if (!result) return next(new AppError(404, 'No Cell Found'));
+    const updatedData = updateBlock(req.params.id);
     res.status(200).json({
       status: 'success',
-      result,
+      updatedData,
     });
   } catch (error) {
     return next(new AppError(500, error.message));

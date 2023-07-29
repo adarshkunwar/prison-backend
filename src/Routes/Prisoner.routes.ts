@@ -1,20 +1,20 @@
 import { Router } from 'express';
 import { upload } from '../Utils/UploadFile';
-// import { getPrisonByIdHandler } from '../controller/Prison.controller';
 import {
+  createPrisonerHandler,
   deletePrisonerHandler,
   getPrisonerHandler,
-  postPrisonerHandler,
+  getSinglePrisonerHandler,
   updatePrisonerHandler,
 } from '../controller/Prisoner.controller';
 
 const router = Router();
 
-router.route('/').get(getPrisonerHandler).post(postPrisonerHandler);
+router.route('/').get(getPrisonerHandler).post(createPrisonerHandler);
 // .post(upload.single('image'), postPrisonerHandler);
 router
   .route('/:id')
-  // .get(getPrisonByIdHandler)
+  .get(getSinglePrisonerHandler)
   .put(updatePrisonerHandler)
   .delete(deletePrisonerHandler);
 
