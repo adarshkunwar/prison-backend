@@ -44,9 +44,6 @@ export const getSingleBlockHandler = async (
 ) => {
   consoleLog('Block get Single Started');
   try {
-    const oldPrison = await BlockRepo.findOneBy({ id: req.params.id });
-    if (!oldPrison) return next(new AppError(404, 'No Block Found'));
-
     const newPrison = await sendUpdatedBlock(req.params.id);
 
     res.status(200).json({

@@ -5,7 +5,7 @@ import sendUpdatedPrison from './getPrison';
 const BlockRepo = AppDataSource.getRepository(Block);
 
 const getTotalCell = (object) => {
-  return object.capacity;
+  return object.cells.length;
 };
 
 const getCurrentOccupancy = (object) => {
