@@ -6,9 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-// import { Block } from './Block';
 import { Cell } from './Cell';
-// import { Prison } from './Prison';
 import { Visitor } from './Visitor';
 
 @Entity()

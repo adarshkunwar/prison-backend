@@ -10,8 +10,11 @@ import {
 
 const router = Router();
 
-router.route('/').get(getPrisonerHandler).post(createPrisonerHandler);
-// .post(upload.single('image'), postPrisonerHandler);
+router
+  .route('/')
+  .get(getPrisonerHandler)
+  .post(upload.single('image'), createPrisonerHandler);
+
 router
   .route('/:id')
   .get(getSinglePrisonerHandler)
