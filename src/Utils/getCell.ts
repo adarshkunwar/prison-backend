@@ -16,13 +16,12 @@ export const getStatus = (object) => {
   else if (object.currentOccupancy === 0) return 'empty';
   else return 'partial';
 };
-
+//  TODO: this does not check the exisitng cell capcity
 export const checkEmptySpace = async (id) => {
   const block = await blockRepo.findOneBy({ id });
   if (!block) return 0;
   const blockCapacity = block.capacity;
   const blockOccupied = block.currentOccupancy;
-
   return blockCapacity - blockOccupied;
 };
 
@@ -35,7 +34,6 @@ export const sendUpdatedCell = async (id) => {
   if (cellOccupancy === cell.currentOccupancy && status === cell.status) {
     return cell;
   }
-
   const newCell = Object.assign(cell, {
     currentOccupancy: cellOccupancy,
     status: status,

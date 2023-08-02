@@ -1,53 +1,33 @@
-import { AppDataSource } from "../data-source"
-import { NextFunction, Request, Response } from "express"
-import { User } from "../entity/User"
+import * as bcrypt from 'bcryptjs';
+import { NextFunction, Request, Response } from 'express';
+import * as jwt from 'jsonwebtoken';
+import AppError from '../Utils/AppError';
+import { consoleLog, getDate } from '../Utils/date';
+import { AppDataSource } from '../data-source';
+import { User } from '../entity/User';
 
-export class UserController {
+const userRepo = AppDataSource.getRepository(User);
 
-    private userRepository = AppDataSource.getRepository(User)
+export const loginHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = await userRepo.findOneBy({ userName: req.body.userName });
+  if (!user) return next(new AppError(404, 'user not found'));
 
-    async all(request: Request, response: Response, next: NextFunction) {
-        return this.userRepository.find()
-    }
+  const user_true = await bcrypt.compare(req.body.password, user.password);
+  if (!user_true)
+    return next(new AppError(401, 'password and username did not match'));
 
-    async one(request: Request, response: Response, next: NextFunction) {
-        const id = parseInt(request.params.id)
+  const payload = {
+    id: user.id,
+  };
 
-
-        const user = await this.userRepository.findOne({
-            where: { id }
-        })
-
-        if (!user) {
-            return "unregistered user"
-        }
-        return user
-    }
-
-    async save(request: Request, response: Response, next: NextFunction) {
-        const { firstName, lastName, age } = request.body;
-
-        const user = Object.assign(new User(), {
-            firstName,
-            lastName,
-            age
-        })
-
-        return this.userRepository.save(user)
-    }
-
-    async remove(request: Request, response: Response, next: NextFunction) {
-        const id = parseInt(request.params.id)
-
-        let userToRemove = await this.userRepository.findOneBy({ id })
-
-        if (!userToRemove) {
-            return "this user not exist"
-        }
-
-        await this.userRepository.remove(userToRemove)
-
-        return "user has been removed"
-    }
-
-}
+  return res.status(200).json({
+    message: 'Login Successful',
+    token: jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+      expiresIn: '7d',
+    }),
+  });
+};

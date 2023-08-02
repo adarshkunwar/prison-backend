@@ -5,15 +5,16 @@ const getCapacity = (object: PrisonType) => {
   }, 0);
 };
 
-const getCurrentOccupancy = (object: PrisonType) => {
-  return object.blocks.reduce((val, i) => {
-    return (
-      val +
-      i.cells.reduce((val, i) => {
-        return val + i.currentOccupancy;
-      }, 0)
-    );
-  }, 0);
+const getCurrentOccupancy = (object) => {
+  let number = 0;
+  object.blocks.forEach((val) => {
+    val.cells.forEach((val) => {
+      val.prisoners.forEach((val) => {
+        number++;
+      });
+    });
+  });
+  return number;
 };
 
 // sample data
@@ -121,6 +122,6 @@ describe('Prison Check', () => {
   });
 
   test('check currentOccupancy', () => {
-    expect(getCurrentOccupancy(data)).toBe(4);
+    expect(getCurrentOccupancy(data)).toBe(3);
   });
 });

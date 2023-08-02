@@ -30,7 +30,7 @@ const check = (data: CellType, newData: PrisonerType) => {
   return data;
 };
 
-describe('Prisoner: ', () => {
+describe('Prisdoner: ', () => {
   describe('Check Prisoner', () => {
     it('should prisoners array length increased', () => {
       expect(check(sampleData, newData).prisoners.length).toBe(2);

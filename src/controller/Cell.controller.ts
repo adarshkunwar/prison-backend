@@ -65,6 +65,7 @@ export const createCellHandler = async (
 ) => {
   consoleLog('cell Create Started');
   try {
+    // TODO: whenever you create a cell the capacity of the block should also check the older cell capacity
     const block = await BlockRepo.findOneBy({ id: req.body.block });
     if (!block) return next(new AppError(404, 'No Block Found By this ID'));
 

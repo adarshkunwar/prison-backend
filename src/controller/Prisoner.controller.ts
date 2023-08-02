@@ -9,7 +9,7 @@ import { Prisoner } from '../entity/Prisoner';
 const PrisonerRepo = AppDataSource.getRepository(Prisoner);
 const cellRepo = AppDataSource.getRepository(Cell);
 
-const checkCellSpace = async (cell) => {
+const checkCellSpace = (cell) => {
   if (cell.capacity <= cell.currentOccupancy) return 0;
   return cell.capacity - cell.currentOccupancy;
 };
@@ -45,7 +45,7 @@ export const getSinglePrisonerHandler = async (
 ) => {
   consoleLog('get single prisoner started' + req.params.id);
   try {
-    await PrisonerRepo.find({
+    await PrisonerRepo.findOne({
       where: { id: req.params.id },
       relations: ['cell'],
     })
@@ -72,16 +72,17 @@ export const createPrisonerHandler = async (
 ) => {
   consoleLog('create prisoner started');
   try {
+    console.log(req.body, 'adf');
+    if (req.file) req.body.image = req.file.filename;
     const data = await cellRepo.findOneBy({ id: req.body.cell });
 
     if (!data) return next(new AppError(404, 'Cell not found'));
     const space = await checkCellSpace(data);
-    if (space <= 0) return next(new AppError(404, 'Cell is full'));
+    if (space < 1) return next(new AppError(404, 'Cell is full'));
 
     await PrisonerRepo.save({
       ...req.body,
       age: parseInt(req.body.age),
-      contactNumber: parseInt(req.body.contactNumber),
       dateOfAdmission: getDate(),
     })
       .then(async (result) => {
@@ -109,34 +110,15 @@ export const updatePrisonerHandler = async (
 ) => {
   consoleLog('update prisoner started');
   try {
-    const data = await PrisonerRepo.findOne({
-      where: { id: req.params.id },
-      relations: ['cell'],
-    });
+    const data = await PrisonerRepo.findOneBy({ id: req.params.id });
     if (!data) return next(new AppError(404, 'Prisoner not found'));
 
-    if (req.body.cell) {
-      const cellNew = await cellRepo.findOneBy({ id: req.body.cell });
-      if (!cellNew) return next(new AppError(404, 'Cell not found'));
-      if ((await checkCellSpace(cellNew)) <= 0)
-        return next(new AppError(404, 'Cell is full'));
-
-      const cellOld = await cellRepo.findOneBy({ id: data.cell.id });
-      console.log(cellOld.id, cellNew.id);
-      if (cellOld.id !== cellNew.id) {
-        cellOld.prisoners.filter((prisoner) => prisoner.id !== data.id);
-        const temp = await cellRepo.save({
-          ...cellOld,
-          currentOccupancy: cellOld.currentOccupancy - 1,
-        });
-        const temp2 = sendUpdatedCell(temp.id);
-      }
-    }
     Object.assign(data, req.body);
+    console.log(data, 'data');
+
     PrisonerRepo.save({
       ...data,
       age: parseInt(req.body.age) || data.age,
-      contactNumber: parseInt(req.body.contactNumber) || data.contactNumber,
     })
       .then((result) => {
         if (!result) return next(new AppError(404, 'Prisoner not found'));
@@ -154,7 +136,7 @@ export const updatePrisonerHandler = async (
   }
 };
 
-export const deletePrisonerHandler = async (
+export const movePrisonerHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -164,6 +146,33 @@ export const deletePrisonerHandler = async (
       where: { id: req.params.id },
       relations: ['cell'],
     });
+    if (!prisoner) return next(new AppError(404, 'prisoner does not exist'));
+
+    const newPrison = await cellRepo.findOneBy({ id: req.params.id });
+    if (!newPrison) return next(new AppError(404, 'cell not found'));
+    const newCheck = checkCellSpace(newPrison);
+    if (newCheck < 1) return next(new AppError(406, 'no empty space'));
+    Object.assign(prisoner, req.body);
+    PrisonerRepo.save(prisoner).then((result) => {
+      res.status(200).json({
+        status: 'success',
+        result,
+      });
+      const oldCellUpdate = sendUpdatedCell(prisoner.cell.id);
+      const newCellUpdate = sendUpdatedCell(req.body.cell);
+    });
+  } catch (err) {
+    return next(new AppError(err.statusCode, err.message));
+  }
+};
+
+export const deletePrisonerHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const prisoner = await PrisonerRepo.findOneBy({ id: req.params.id });
     if (!prisoner) return next(new AppError(404, 'Prisoner not found'));
 
     await PrisonerRepo.remove(prisoner)

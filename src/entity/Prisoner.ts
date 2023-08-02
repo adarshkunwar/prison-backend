@@ -27,7 +27,7 @@ export class Prisoner {
   address: string;
 
   @Column()
-  contactNumber: number;
+  contactNumber: string;
 
   @Column()
   dateOfAdmission: string;
@@ -57,6 +57,6 @@ export class Prisoner {
   })
   visitors: Visitor[];
 
-  @Column()
+  @Column({ nullable: true })
   latestVisit: string;
 }

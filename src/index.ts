@@ -15,6 +15,7 @@ import CellRoutes from './Routes/Cell.routes';
 import PrisonRoutes from './Routes/Prison.routes';
 import PrisonerRoutes from './Routes/Prisoner.routes';
 import StaffRoutes from './Routes/Staff.routes';
+import UserRoutes from './Routes/User.routes';
 import VisitorRoutes from './Routes/Visitor.routes';
 
 AppDataSource.initialize()
@@ -65,6 +66,7 @@ AppDataSource.initialize()
     });
 
     // custom routes
+    app.use('/user', UserRoutes);
     app.use('/block', BlockRoutes);
     app.use('/prison', PrisonRoutes);
     app.use('/cell', CellRoutes);

@@ -1,4 +1,4 @@
-import { Request, Router } from 'express';
+import { Request } from 'express';
 import * as multer from 'multer';
 
 const storage = multer.diskStorage({
