@@ -1,190 +1,131 @@
 import { NextFunction, Request, Response } from 'express';
 import AppError from '../Utils/AppError';
+import { consoleLog, getDate } from '../Utils/date';
 import { AppDataSource } from '../data-source';
+import { Prisoner } from '../entity/Prisoner';
 import { Visitor } from '../entity/Visitor';
 
-const VistorRepo = AppDataSource.getRepository(Visitor);
+const VisitorRepo = AppDataSource.getRepository(Visitor);
+const PrisonerRepo = AppDataSource.getRepository(Prisoner);
 
-/**
- * Handler for GET request to retrieve all Block instances.
- */
 export const getVisitorHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  Promise.resolve();
+  consoleLog('Visitor get Started');
   try {
-    // Retrieve all instances of the Block entity from BlockRepo
-    await VistorRepo.find({
-      // relations: {
-      //   prisoner: true,
-      // },
+    await VisitorRepo.find({ relations: ['prisoner'] })
+      .then((result) => {
+        if (!result) return next(new AppError(404, 'No Visitor Found'));
+        res.status(200).json({
+          status: 'success',
+          result,
+        });
+      })
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
+  } catch (error) {
+    return next(new AppError(error.statusCode, error.message));
+  }
+  consoleLog('Visitor get Ended');
+};
+
+export const getSingleVisitorHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  consoleLog('Visitor Single Get Started');
+  try {
+    await VisitorRepo.findOne({
+      where: { id: req.params.id },
+      relations: ['prisoner'],
     })
       .then((result) => {
-        // Send a JSON response with a 200 status code and the retrieved data
         res.status(200).json({
           status: 'success',
           result,
         });
       })
-      .catch((error) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
-      });
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
+  consoleLog('Visitor Single Get Ended');
 };
 
-export const getVisitorByIdHandler = async (
+export const createVisitorHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  consoleLog('Visitor Add Started');
   try {
-    // Retrieve the existing Block entity based on the id provided in the request parameters
-    await VistorRepo.findOneBy({ id: req.params.id })
+    const prisoner = await PrisonerRepo.findOneBy({ id: req.body.prisoner });
+    if (!prisoner) return next(new AppError(404, 'Prisoner Not Found'));
+
+    await VisitorRepo.save({
+      ...req.body,
+      age: parseInt(req.body.age),
+      dateOfVisit: getDate(),
+    })
       .then((result) => {
-        if (!result) {
-          // If no Block instance is found, pass an error to the error-handling middleware using the AppError class
-          return next(new AppError(404, 'Visitor not found'));
-        }
-        // Send a JSON response with a 200 status code and the retrieved data
         res.status(200).json({
           status: 'success',
           result,
         });
       })
-      .catch((error) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
-      });
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
+  consoleLog('Visitor Add Ended');
 };
 
-/**
- * Handler for POST request to create a new Block instance.
- */
-export const postVisitorHandler = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    console.log(req.body);
-
-    // Save the modified req.body data using the save method of BlockRepo
-    await VistorRepo.save(req.body)
-      .then((result) => {
-        // Send a JSON response with a 200 status code and the saved data
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
-      });
-  } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
-  }
-};
-
-/**
- * Handler for PATCH/PUT request to update a Block instance.
- */
 export const updateVisitorHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Retrieve the existing Block entity based on the id provided in the request parameters
-    let service = await VistorRepo.findOneBy({ id: req.params.id });
+    const visitor = await VisitorRepo.findOneBy({ id: req.params.id });
+    if (!visitor) return next(new AppError(404, 'no Visitor found'));
 
-    if (!service) {
-      // If the Block entity is not found, pass a 404 status code and "Block not found" message to the error-handling middleware
-      return next(new AppError(404, 'Block not found'));
-    }
-
-    let visitors = [];
-
-    // Parse each item in the req.body.service array as JSON and push into the product array
-    req.body.service.map((item) => {
-      let data = JSON.parse(item);
-      return visitors.push(data);
-    });
-
-    // Reassign the req.body.service property with the updated product array
-    req.body.service = [...visitors];
-
-    console.log(req.body);
-
-    // Update the existing Block entity with the properties from req.body using Object.assign
-    Object.assign(service, req.body);
-
-    // Save the modified Block entity using the save method of BlockRepo
-    await VistorRepo.save(service)
-      .then((result) => {
-        // Send a JSON response with a 200 status code and the saved data
+    Object.assign(visitor, req.body);
+    await VisitorRepo.save({
+      ...visitor,
+      age: req.body.age ? parseInt(req.body.age) : visitor.age,
+    })
+      .then((result) =>
         res.status(200).json({
-          status: 'success',
+          status: 'Success',
           result,
-        });
-      })
-      .catch((error) => {
-        // If an error occurs, send a JSON response with a 500 status code and the error
-        res.status(500).json({
-          status: 'error',
-          error,
-        });
-      });
+        })
+      )
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
   } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(error.statusCode, error.message));
   }
 };
 
-/**
- * Handler for DELETE request to remove a Block instance.
- */
 export const deleteVisitorHandler = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Retrieve the existing Block entity based on the id provided in the request parameters
-    let Service = await VistorRepo.findOneBy({ id: req.params.id });
+    const visitor = await VisitorRepo.findOneBy({ id: req.params.id });
+    if (!visitor) next(new AppError(404, 'No Visitor Found'));
 
-    if (!Service) {
-      // If the Block entity is not found, pass a 404 status code and "Block not found" message to the error-handling middleware
-      return next(new AppError(404, 'Block not found'));
-    }
-
-    // Remove the Block entity using the remove method of BlockRepo
-    await VistorRepo.remove(Service)
-      .then((result: any) => {
-        console.log(result);
-        // Send a JSON response with a 200 status code and the removed data
+    await VisitorRepo.remove(visitor)
+      .then((result) =>
         res.status(200).json({
           status: 'success',
           result,
-        });
-      })
-      .catch((error: any) => {
-        // If an error occurs, pass it to the error-handling middleware using the AppError class
-        next(new AppError(error.statusCode, error.message));
-      });
-  } catch (error) {
-    // If an error occurs, pass it to the error-handling middleware using the AppError class
-    next(new AppError(error.statusCode, error.message));
+        })
+      )
+      .catch((err) => next(new AppError(err.statusCode, err.message)));
+  } catch (err) {
+    return next(new AppError(err.statusCode, err.message));
   }
 };

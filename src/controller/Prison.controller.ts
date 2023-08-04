@@ -13,7 +13,7 @@ export const getPrisonHandler = async (
 ) => {
   consoleLog('Prison get Started');
   try {
-    const prison = await PrisonRepo.find();
+    const prison = await PrisonRepo.find({ order: { capacity: 'DESC' } });
     if (!prison) return new AppError(404, 'No Prison Found');
 
     const newPrison = [];
@@ -21,13 +21,9 @@ export const getPrisonHandler = async (
       const updatedPrison = await sendUpdatedPrison(prison[i].id);
       newPrison.push(updatedPrison);
     }
-
-    res.status(200).json({
-      status: 'success',
-      result: newPrison,
-    });
+    res.status(200).json({ status: 'success', result: newPrison });
   } catch (error) {
-    return next(new AppError(502, error.message));
+    return next(new AppError(500, 'Some Error Occured'));
   }
 };
 
@@ -42,13 +38,9 @@ export const getSinglePrisonHandler = async (
     if (!singlePrison) return new AppError(404, 'No Prison Found');
 
     const updatedPrison = await sendUpdatedPrison(req.params.id);
-
-    res.status(200).json({
-      status: 'success',
-      result: updatedPrison,
-    });
+    res.status(200).json({ status: 'success', result: updatedPrison });
   } catch (err) {
-    return next(new AppError(err.statusCode, err.message));
+    return next(new AppError(500, 'Some Error Occured'));
   }
   consoleLog('Prison get Single Ended');
 };
@@ -67,13 +59,8 @@ export const createPrisonHandler = async (
       description: req.body.description || 'No description provided',
       createdDate: getDate(),
     })
-      .then((result) =>
-        res.status(200).json({
-          status: 'success',
-          result,
-        })
-      )
-      .catch(() => next(new AppError(504, 'could not save new prison')));
+      .then((result) => res.status(200).json({ status: 'success', result }))
+      .catch(() => next(new AppError(500, 'could not save new prison')));
   } catch (err) {
     return next(new AppError(500, 'some error occured'));
   }
@@ -89,22 +76,13 @@ export const updatePrisonHandler = async (
   try {
     let prison = await PrisonRepo.findOneBy({ id: req.params.id });
     if (!prison) return next(new AppError(404, 'Prison not found'));
+
     Object.assign(prison, req.body);
     await PrisonRepo.save(prison)
-      .then((result) => {
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error) => {
-        res.status(500).json({
-          status: 'error',
-          error,
-        });
-      });
+      .then((result) => res.status(200).json({ status: 'success', result }))
+      .catch((error) => next(new AppError(500, 'Could not update prison')));
   } catch (error) {
-    next(new AppError(error.statusCode, error.message));
+    return next(new AppError(500, 'Some Error Occured'));
   }
   consoleLog('Prison Update Ended');
 };
@@ -120,15 +98,8 @@ export const deletePrisonHandler = async (
     if (!prison) return next(new AppError(404, 'Prison not found'));
 
     await PrisonRepo.remove(prison)
-      .then((result: any) => {
-        res.status(200).json({
-          status: 'success',
-          result,
-        });
-      })
-      .catch((error: any) => {
-        next(new AppError(error.statusCode, error.message));
-      });
+      .then((result) => res.status(200).json({ status: 'success', result }))
+      .catch((error) => next(new AppError(error.statusCode, error.message)));
   } catch (error) {
     next(new AppError(error.statusCode, error.message));
   }

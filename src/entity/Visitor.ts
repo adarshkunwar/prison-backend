@@ -22,8 +22,8 @@ export class Visitor {
   @Column()
   contactNumber: string;
 
-  // @Column()
-  // relation: string;
+  @Column()
+  relation: string;
 
   @Column()
   dateOfVisit: string;

@@ -56,7 +56,4 @@ export class Prisoner {
     onUpdate: 'CASCADE',
   })
   visitors: Visitor[];
-
-  @Column({ nullable: true })
-  latestVisit: string;
 }

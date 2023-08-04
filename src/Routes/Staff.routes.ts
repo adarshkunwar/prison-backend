@@ -1,18 +1,18 @@
 import { Router } from 'express';
 import {
+  createStaffHandler,
   deleteStaffHandler,
-  getStaffByIdHandler,
+  getSingleStaffHandler,
   getStaffHandler,
-  postStaffHandler,
   updateStaffHandler,
 } from '../controller/Staff.controller';
 
 const router = Router();
 
-router.route('/').get(getStaffHandler).post(postStaffHandler);
+router.route('/').get(getStaffHandler).post(createStaffHandler);
 router
   .route('/:id')
-  .get(getStaffByIdHandler)
+  .get(getSingleStaffHandler)
   .put(updateStaffHandler)
   .delete(deleteStaffHandler);
 
