@@ -80,7 +80,7 @@ export const updatePrisonHandler = async (
     Object.assign(prison, req.body);
     await PrisonRepo.save(prison)
       .then((result) => res.status(200).json({ status: 'success', result }))
-      .catch((error) => next(new AppError(500, 'Could not update prison')));
+      .catch(() => next(new AppError(500, 'Could not update prison')));
   } catch (error) {
     return next(new AppError(500, 'Some Error Occured'));
   }

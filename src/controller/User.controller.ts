@@ -26,6 +26,7 @@ export const loginHandler = async (
 
   return res.status(200).json({
     message: 'Login Successful',
+    userName: user,
     token: jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: '7d',
     }),

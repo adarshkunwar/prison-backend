@@ -17,7 +17,9 @@ export const getBlockHandler = async (
 ) => {
   consoleLog('Block get Started');
   try {
-    const result = await BlockRepo.find();
+    const result = await BlockRepo.find({
+      order: { capacity: 'DESC' },
+    });
     if (!result) return next(new AppError(404, 'No Block Found'));
 
     const newBlock = [];

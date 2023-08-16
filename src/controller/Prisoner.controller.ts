@@ -78,7 +78,7 @@ export const createPrisonerHandler = async (
 
     if (!data) return next(new AppError(404, 'Cell not found'));
     const space = await checkCellSpace(data);
-    if (space < 1) return next(new AppError(404, 'Cell is full'));
+    if (space < 1) return next(new AppError(480, 'Cell is full'));
 
     await PrisonerRepo.save({
       ...req.body,
